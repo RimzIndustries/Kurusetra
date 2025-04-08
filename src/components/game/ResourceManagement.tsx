@@ -294,13 +294,16 @@ const ResourceManagement = () => {
   };
 
   return (
-    <div className="bg-background min-h-screen p-6">
+    <div className="bg-background min-h-screen p-6 bg-gradient-to-b from-background to-background/95">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl font-bold mb-6">Resource Management</h1>
+        <div className="flex items-center gap-3 mb-6">
+          <Coins className="h-8 w-8 text-yellow-500" />
+          <h1 className="text-3xl font-bold">Resource Management</h1>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
@@ -373,7 +376,10 @@ const ResourceManagement = () => {
           </Card>
         </div>
 
-        <Tabs defaultValue="allocation" className="w-full">
+        <Tabs
+          defaultValue="allocation"
+          className="w-full bg-card/30 p-4 rounded-lg border border-border/40 shadow-sm"
+        >
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="allocation">Resource Allocation</TabsTrigger>
             <TabsTrigger value="trade">Trade</TabsTrigger>
@@ -507,7 +513,10 @@ const ResourceManagement = () => {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" onClick={applyAllocation}>
+                <Button
+                  className="w-full bg-green-600 hover:bg-green-700 transition-colors"
+                  onClick={applyAllocation}
+                >
                   <BarChart className="h-4 w-4 mr-2" /> Apply Allocation
                 </Button>
               </CardFooter>

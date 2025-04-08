@@ -1,76 +1,232 @@
 @tailwind base;
-  @tailwind components;
-  @tailwind utilities;
+@tailwind components;
+@tailwind utilities;
 
-  @layer base {
-    :root {
-      --background: 0 0% 100%;
-      --foreground: 222.2 84% 4.9%;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
 
-      --card: 0 0% 100%;
-      --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
 
-      --popover: 0 0% 100%;
-      --popover-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
 
-      --primary: 222.2 47.4% 11.2%;
-      --primary-foreground: 210 40% 98%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
 
-      --secondary: 210 40% 96.1%;
-      --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
 
-      --muted: 210 40% 96.1%;
-      --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-      --accent: 210 40% 96.1%;
-      --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 0%;
 
-      --destructive: 0 84.2% 60.2%;
-      --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-      --border: 214.3 31.8% 91.4%;
-      --input: 214.3 31.8% 91.4%;
-      --ring: 222.2 84% 4.9%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 0%;
 
-      --radius: 0.5rem;
+    --radius: 1rem;
+
+    /* Neumorphism Variables */
+    --neuro-bg: 0 0% 95%;
+    --neuro-highlight: 0 0% 100%;
+    --neuro-shadow: 0 0% 85%;
+    --neuro-primary: 0 0% 0%;
+    --neuro-secondary: 0 0% 96%;
+    --neuro-accent: 0 0% 20%;
+
+    --neuro-shadow-flat: 6px 6px 12px hsl(var(--neuro-shadow) / 0.9),
+      -6px -6px 12px hsl(var(--neuro-highlight) / 0.9);
+    --neuro-shadow-pressed: inset 4px 4px 8px hsl(var(--neuro-shadow) / 0.9),
+      inset -4px -4px 8px hsl(var(--neuro-highlight) / 0.9);
+    --neuro-shadow-convex: 6px 6px 12px hsl(var(--neuro-shadow) / 0.9),
+      -6px -6px 12px hsl(var(--neuro-highlight) / 0.9),
+      inset 1px 1px 2px hsl(var(--neuro-highlight) / 0.9),
+      inset -1px -1px 2px hsl(var(--neuro-shadow) / 0.9);
+    --neuro-shadow-concave: 6px 6px 12px hsl(var(--neuro-shadow) / 0.9),
+      -6px -6px 12px hsl(var(--neuro-highlight) / 0.9),
+      inset 4px 4px 8px hsl(var(--neuro-highlight) / 0.9),
+      inset -4px -4px 8px hsl(var(--neuro-shadow) / 0.9);
+
+    --neuro-shadow-flat-lg: 12px 12px 24px hsl(var(--neuro-shadow) / 0.9),
+      -12px -12px 24px hsl(var(--neuro-highlight) / 0.9);
+    --neuro-shadow-pressed-lg: inset 8px 8px 16px hsl(var(--neuro-shadow) / 0.9),
+      inset -8px -8px 16px hsl(var(--neuro-highlight) / 0.9);
+    --neuro-shadow-convex-lg: 12px 12px 24px hsl(var(--neuro-shadow) / 0.9),
+      -12px -12px 24px hsl(var(--neuro-highlight) / 0.9),
+      inset 2px 2px 4px hsl(var(--neuro-highlight) / 0.9),
+      inset -2px -2px 4px hsl(var(--neuro-shadow) / 0.9);
+    --neuro-shadow-concave-lg: 12px 12px 24px hsl(var(--neuro-shadow) / 0.9),
+      -12px -12px 24px hsl(var(--neuro-highlight) / 0.9),
+      inset 8px 8px 16px hsl(var(--neuro-highlight) / 0.9),
+      inset -8px -8px 16px hsl(var(--neuro-shadow) / 0.9);
+  }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 0 0% 95%;
+    --primary-foreground: 0 0% 10%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 95%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 80%;
+
+    /* Neumorphism Dark Variables */
+    --neuro-bg: 0 0% 12%;
+    --neuro-highlight: 0 0% 18%;
+    --neuro-shadow: 0 0% 6%;
+    --neuro-primary: 0 0% 85%;
+    --neuro-secondary: 0 0% 17%;
+    --neuro-accent: 0 0% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-neuro-bg text-foreground;
+  }
+}
+
+@layer utilities {
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 8s ease infinite;
+  }
+
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
     }
-
-    .dark {
-      --background: 222.2 84% 4.9%;
-      --foreground: 210 40% 98%;
-
-      --card: 222.2 84% 4.9%;
-      --card-foreground: 210 40% 98%;
-
-      --popover: 222.2 84% 4.9%;
-      --popover-foreground: 210 40% 98%;
-
-      --primary: 210 40% 98%;
-      --primary-foreground: 222.2 47.4% 11.2%;
-
-      --secondary: 217.2 32.6% 17.5%;
-      --secondary-foreground: 210 40% 98%;
-
-      --muted: 217.2 32.6% 17.5%;
-      --muted-foreground: 215 20.2% 65.1%;
-
-      --accent: 217.2 32.6% 17.5%;
-      --accent-foreground: 210 40% 98%;
-
-      --destructive: 0 62.8% 30.6%;
-      --destructive-foreground: 210 40% 98%;
-
-      --border: 217.2 32.6% 17.5%;
-      --input: 217.2 32.6% 17.5%;
-      --ring: 212.7 26.8% 83.9%;
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
     }
   }
 
-  @layer base {
-    * {
-      @apply border-border;
-    }
-    body {
-      @apply bg-background text-foreground;
-    }
+  .bg-game-gradient {
+    background: linear-gradient(
+      to bottom,
+      hsl(var(--neuro-bg)) 0%,
+      hsl(var(--neuro-bg) / 0.95) 100%
+    );
   }
+
+  .card-hover-effect {
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+
+  .card-hover-effect:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--neuro-shadow-flat-lg);
+  }
+
+  .header-gradient {
+    background: linear-gradient(
+      to right,
+      hsl(var(--neuro-primary) / 0.8),
+      hsl(var(--neuro-primary))
+    );
+    background-clip: text;
+    color: transparent;
+  }
+
+  .neuro-flat {
+    background-color: hsl(var(--neuro-bg));
+    box-shadow: var(--neuro-shadow-flat);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .neuro-pressed {
+    background-color: hsl(var(--neuro-bg));
+    box-shadow: var(--neuro-shadow-pressed);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .neuro-convex {
+    background-color: hsl(var(--neuro-bg));
+    box-shadow: var(--neuro-shadow-convex);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .neuro-concave {
+    background-color: hsl(var(--neuro-bg));
+    box-shadow: var(--neuro-shadow-concave);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .neuro-hover {
+    transition: all 0.3s ease;
+  }
+
+  .neuro-hover:hover {
+    transform: translateY(-2px);
+  }
+
+  .neuro-active {
+    transition: all 0.15s ease;
+  }
+
+  .neuro-active:active {
+    transform: translateY(1px);
+  }
+
+  .neuro-glow {
+    position: relative;
+  }
+
+  .neuro-glow::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 15px 2px hsl(var(--neuro-primary) / 0.1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .neuro-glow:hover::after {
+    opacity: 1;
+  }
+}

@@ -2,10 +2,10 @@
 module.exports = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
   ],
   prefix: "",
   theme: {
@@ -51,11 +51,33 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        neuro: {
+          bg: "hsl(var(--neuro-bg))",
+          highlight: "hsl(var(--neuro-highlight))",
+          shadow: "hsl(var(--neuro-shadow))",
+          primary: "hsl(var(--neuro-primary))",
+          secondary: "hsl(var(--neuro-secondary))",
+          accent: "hsl(var(--neuro-accent))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "16px",
+        "2xl": "20px",
+      },
+      boxShadow: {
+        "neuro-flat": "var(--neuro-shadow-flat)",
+        "neuro-pressed": "var(--neuro-shadow-pressed)",
+        "neuro-convex": "var(--neuro-shadow-convex)",
+        "neuro-concave": "var(--neuro-shadow-concave)",
+        "neuro-flat-lg": "var(--neuro-shadow-flat-lg)",
+        "neuro-pressed-lg": "var(--neuro-shadow-pressed-lg)",
+        "neuro-convex-lg": "var(--neuro-shadow-convex-lg)",
+        "neuro-concave-lg": "var(--neuro-shadow-concave-lg)",
+        "neuro-glow": "0 0 20px 5px hsl(var(--neuro-primary) / 0.1)",
+        "neuro-glow-lg": "0 0 30px 10px hsl(var(--neuro-primary) / 0.15)",
       },
       keyframes: {
         "accordion-down": {
@@ -74,4 +96,4 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-}
+};

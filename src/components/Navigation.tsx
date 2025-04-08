@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Home,
   Castle,
@@ -8,13 +8,23 @@ import {
   Sword,
   Users,
   Shield,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "./ui/button";
 
 const Navigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut, user } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
+  };
 
   const navItems = [
-    { path: "/dashboard", label: "Home", icon: <Home className="h-5 w-5" /> },
+    { path: "/", label: "Home", icon: <Home className="h-5 w-5" /> },
     {
       path: "/kingdom",
       label: "Kingdom",
@@ -41,13 +51,17 @@ const Navigation = () => {
       icon: <Users className="h-5 w-5" />,
     },
     { path: "/combat", label: "Combat", icon: <Shield className="h-5 w-5" /> },
+    { path: "/map", label: "World Map", icon: <Shield className="h-5 w-5" /> },
   ];
 
   return (
-    <header className="border-b bg-background sticky top-0 z-10">
+    <header className="border-b bg-background sticky top-0 z-10 shadow-sm">
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="text-2xl font-bold">
+          <Link
+            to="/"
+            className="text-2xl font-bold bg-gradient-to-r from-primary/80 to-primary bg-clip-text text-transparent"
+          >
             Kurusetra
           </Link>
 
@@ -67,26 +81,75 @@ const Navigation = () => {
                 {item.label}
               </Link>
             ))}
+            {user && (
+              <>
+                <Link
+                  to="/profile"
+                  className={`px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors
+                    ${
+                      location.pathname === "/profile"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground hover:bg-accent hover:text-accent-foreground"
+                    }`}
+                >
+                  <Users className="h-5 w-5" />
+                  Profile
+                </Link>
+                <Button
+                  variant="ghost"
+                  onClick={handleLogout}
+                  className="ml-2 flex items-center gap-2"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span className="hidden sm:inline">Logout</span>
+                </Button>
+              </>
+            )}
           </nav>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button className="p-2 rounded-md hover:bg-accent">
-              <span className="sr-only">Open menu</span>
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
+          <div className="flex items-center gap-2">
+            {user && (
+              <>
+                <Link
+                  to="/profile"
+                  className={`md:hidden px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors
+                    ${
+                      location.pathname === "/profile"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground hover:bg-accent hover:text-accent-foreground"
+                    }`}
+                >
+                  <Users className="h-5 w-5" />
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="md:hidden"
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </>
+            )}
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button className="p-2 rounded-md hover:bg-accent">
+                <span className="sr-only">Open menu</span>
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 

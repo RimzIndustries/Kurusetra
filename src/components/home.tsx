@@ -1,5 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { useMultiplayer } from "../contexts/MultiplayerContext";
 import {
   Shield,
   Building,
@@ -24,10 +27,15 @@ import KingdomOverview from "./game/KingdomOverview";
 import ActionPanel from "./game/ActionPanel";
 import RaceSelection from "./game/RaceSelection";
 import CombatInterface from "./game/CombatInterface";
+import OnlineUsers from "./game/OnlineUsers";
+import GameIntegration from "./game/GameIntegration";
 
 const Home = () => {
-  // Mock state to determine if user is new or returning
-  const [isNewPlayer, setIsNewPlayer] = React.useState(false);
+  // Get auth context and navigation
+  const { user, userProfile, hasCompletedSetup } = useAuth();
+  const navigate = useNavigate();
+
+  // State for UI components
   const [showCombatInterface, setShowCombatInterface] = React.useState(false);
 
   // Mock data for notifications
@@ -61,10 +69,12 @@ const Home = () => {
     }
   };
 
-  // If new player, show race selection
-  if (isNewPlayer) {
-    return <RaceSelection onComplete={() => setIsNewPlayer(false)} />;
-  }
+  // Check if user has completed setup
+  useEffect(() => {
+    if (user && !hasCompletedSetup()) {
+      navigate("/setup-kingdom");
+    }
+  }, [user, hasCompletedSetup, navigate]);
 
   // If combat interface is active, show it
   if (showCombatInterface) {
@@ -83,10 +93,15 @@ const Home = () => {
   }
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background min-h-screen bg-gradient-to-b from-background to-background/95 relative overflow-hidden">
       <header className="border-b p-4">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold">Kurusetra</h1>
+          {userProfile.kingdomName && (
+            <p className="text-sm text-muted-foreground ml-2">
+              {userProfile.kingdomName} Kingdom
+            </p>
+          )}
           <div className="flex items-center space-x-4">
             <Button variant="outline" size="sm">
               <Users className="mr-2 h-4 w-4" />
@@ -108,7 +123,7 @@ const Home = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <KingdomOverview />
+              <GameIntegration />
             </motion.div>
 
             <motion.div
@@ -122,7 +137,7 @@ const Home = () => {
           </div>
 
           <div className="lg:col-span-1">
-            <Card>
+            <Card className="bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-convex transition-all duration-300 neuro-glow">
               <CardHeader>
                 <CardTitle>Notifications</CardTitle>
                 <CardDescription>Recent kingdom activities</CardDescription>
@@ -163,7 +178,7 @@ const Home = () => {
               </CardFooter>
             </Card>
 
-            <Card className="mt-6">
+            <Card className="mt-6 bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-convex transition-all duration-300 neuro-glow">
               <CardHeader>
                 <CardTitle>Active Tasks</CardTitle>
                 <CardDescription>Time-based activities</CardDescription>
@@ -206,7 +221,7 @@ const Home = () => {
               </CardContent>
             </Card>
 
-            <Card className="mt-6">
+            <Card className="mt-6 bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-convex transition-all duration-300 neuro-glow">
               <CardHeader>
                 <CardTitle>Kingdom Stats</CardTitle>
               </CardHeader>
@@ -262,6 +277,15 @@ const Home = () => {
                 </Tabs>
               </CardContent>
             </Card>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="mt-6"
+            >
+              <OnlineUsers />
+            </motion.div>
           </div>
         </div>
       </main>
