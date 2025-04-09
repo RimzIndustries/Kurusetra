@@ -832,14 +832,6 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
           onValueChange={setCombatType}
         >
           <TabsList className="grid w-full grid-cols-2 mb-10 p-1 bg-neuro-bg shadow-neuro-concave rounded-xl overflow-hidden relative">
-            <motion.div
-              className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-red-500 to-amber-500 z-10"
-              animate={{
-                width: "50%",
-                x: combatType === "warfare" ? "0%" : "50%",
-              }}
-              transition={{ duration: 0.3 }}
-            />
             <TabsTrigger
               value="warfare"
               className="flex items-center gap-2 py-4 transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-transparent data-[state=active]:to-muted/80"

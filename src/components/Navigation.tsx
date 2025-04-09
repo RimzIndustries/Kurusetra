@@ -19,8 +19,12 @@ const Navigation = () => {
   const { signOut, user } = useAuth();
 
   const handleLogout = async () => {
-    await signOut();
-    navigate("/login");
+    try {
+      await signOut();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const navItems = [

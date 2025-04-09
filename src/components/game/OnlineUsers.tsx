@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,12 @@ import {
   BellOff,
   UserPlus,
   UserMinus,
+  Map,
+  Filter,
+  Search,
+  Check,
+  Star,
+  Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -44,11 +50,17 @@ const OnlineUsers = () => {
     getMessagesWithUser,
     getUserById,
     isUserOnline,
+    markMessageAsRead,
+    getNearbyPlayers,
+    getUnreadMessageCount,
   } = useMultiplayer();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showNearbyOnly, setShowNearbyOnly] = useState(false);
+  const [nearbyRadius, setNearbyRadius] = useState(100);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const selectedUser = selectedUserId
@@ -58,13 +70,35 @@ const OnlineUsers = () => {
     ? getMessagesWithUser(selectedUserId)
     : [];
 
-  // Filter users based on active tab
-  const filteredUsers = onlineUsers.filter((user) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "online") return user.status === "online";
-    if (activeTab === "away") return user.status === "away";
-    return true;
-  });
+  // Get nearby players if the option is enabled
+  const nearbyPlayers = useMemo(() => {
+    return showNearbyOnly ? getNearbyPlayers(nearbyRadius) : [];
+  }, [showNearbyOnly, nearbyRadius, getNearbyPlayers]);
+
+  // Filter users based on active tab, search query, and nearby filter
+  const filteredUsers = useMemo(() => {
+    return onlineUsers.filter((user) => {
+      // Filter by tab
+      if (activeTab === "online" && user.status !== "online") return false;
+      if (activeTab === "away" && user.status !== "away") return false;
+
+      // Filter by search query
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesName = user.kingdomName.toLowerCase().includes(query);
+        const matchesRace = user.race.toLowerCase().includes(query);
+        const matchesSpecialty = user.specialty?.toLowerCase().includes(query);
+        if (!matchesName && !matchesRace && !matchesSpecialty) return false;
+      }
+
+      // Filter by nearby
+      if (showNearbyOnly) {
+        return nearbyPlayers.some((p) => p.id === user.id);
+      }
+
+      return true;
+    });
+  }, [onlineUsers, activeTab, searchQuery, showNearbyOnly, nearbyPlayers]);
 
   // Scroll to bottom of messages when new messages arrive
   useEffect(() => {
@@ -75,10 +109,22 @@ const OnlineUsers = () => {
 
   const handleSendMessage = async () => {
     if (selectedUserId && messageInput.trim()) {
-      await sendMessage(selectedUserId, messageInput.trim());
+      await sendMessage(selectedUserId, messageInput.trim(), "text");
       setMessageInput("");
     }
   };
+
+  // Mark messages as read when opening chat dialog
+  useEffect(() => {
+    if (selectedUserId) {
+      const userMessages = getMessagesWithUser(selectedUserId);
+      userMessages.forEach((msg) => {
+        if (!msg.read && msg.senderId === selectedUserId) {
+          markMessageAsRead(msg.id);
+        }
+      });
+    }
+  }, [selectedUserId, getMessagesWithUser, markMessageAsRead]);
 
   const toggleNotifications = () => {
     setNotificationsEnabled(!notificationsEnabled);
@@ -129,6 +175,27 @@ const OnlineUsers = () => {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 rounded-full"
+                    onClick={() => setShowNearbyOnly(!showNearbyOnly)}
+                  >
+                    <Map
+                      className={`h-4 w-4 ${showNearbyOnly ? "text-primary" : "text-muted-foreground"}`}
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {showNearbyOnly
+                    ? "Show all players"
+                    : "Show nearby players only"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full"
                     onClick={() =>
                       setUserStatus(
                         currentUserStatus === "online" ? "away" : "online",
@@ -151,6 +218,29 @@ const OnlineUsers = () => {
             </TooltipProvider>
           </div>
         </div>
+
+        <div className="mt-2 mb-3">
+          <Input
+            placeholder="Search players..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="mb-2 shadow-neuro-flat"
+            prefix={<Search className="h-4 w-4 text-muted-foreground mr-2" />}
+            suffix={
+              searchQuery ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              ) : null
+            }
+          />
+        </div>
+
         <Tabs defaultValue="all" className="mt-2" onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="all">All ({onlineUsers.length})</TabsTrigger>
@@ -234,16 +324,32 @@ const OnlineUsers = () => {
                         "Offline"
                       )}
                     </Badge>
+
+                    {user.strength && (
+                      <Badge
+                        variant="outline"
+                        className="bg-neuro-bg shadow-neuro-flat text-xs"
+                      >
+                        <Zap className="h-3 w-3 mr-1 text-amber-500" />
+                        {user.strength}
+                      </Badge>
+                    )}
+
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 rounded-full hover:bg-primary/10"
+                            className="h-8 w-8 rounded-full hover:bg-primary/10 relative"
                             onClick={() => setSelectedUserId(user.id)}
                           >
                             <MessageCircle className="h-4 w-4 text-primary" />
+                            {getUnreadMessageCount(user.id) > 0 && (
+                              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                                {getUnreadMessageCount(user.id)}
+                              </span>
+                            )}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>Send message</TooltipContent>
@@ -324,7 +430,72 @@ const OnlineUsers = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       className={`max-w-[80%] p-3 rounded-lg ${msg.senderId === selectedUserId ? "bg-muted" : "bg-primary/10"} ${msg.senderId === selectedUserId ? "shadow-md" : "shadow-neuro-flat"}`}
                     >
+                      {msg.type === "system" && (
+                        <div className="flex items-center mb-1">
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300"
+                          >
+                            System
+                          </Badge>
+                        </div>
+                      )}
+
+                      {msg.type === "alliance" && (
+                        <div className="flex items-center mb-1">
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-blue-100 text-blue-800 border-blue-300"
+                          >
+                            Alliance
+                          </Badge>
+                          {msg.attachedData?.senderKingdomName && (
+                            <span className="text-xs ml-1 text-muted-foreground">
+                              from {msg.attachedData.senderKingdomName}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {msg.type === "trade" && (
+                        <div className="flex items-center mb-1">
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-green-100 text-green-800 border-green-300"
+                          >
+                            Trade Offer
+                          </Badge>
+                        </div>
+                      )}
+
                       <p className="text-sm">{msg.message}</p>
+
+                      {msg.type === "trade" && msg.attachedData && (
+                        <div className="mt-2 p-2 bg-background/50 rounded border border-border">
+                          <p className="text-xs font-medium">Trade Details:</p>
+                          <div className="text-xs">
+                            <p>Offering: {msg.attachedData.offering}</p>
+                            <p>Requesting: {msg.attachedData.requesting}</p>
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs h-7 px-2"
+                            >
+                              <Check className="h-3 w-3 mr-1" /> Accept
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs h-7 px-2"
+                            >
+                              <X className="h-3 w-3 mr-1" /> Decline
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between mt-1">
                         <p className="text-xs text-muted-foreground">
                           {new Date(msg.timestamp).toLocaleTimeString([], {
@@ -332,6 +503,15 @@ const OnlineUsers = () => {
                             minute: "2-digit",
                           })}
                         </p>
+                        {msg.senderId !== selectedUserId && (
+                          <span className="text-xs text-muted-foreground ml-2">
+                            {msg.read ? (
+                              <Check className="h-3 w-3 text-green-500" />
+                            ) : (
+                              <span className="opacity-50">Sent</span>
+                            )}
+                          </span>
+                        )}
                       </div>
                     </motion.div>
                   </div>

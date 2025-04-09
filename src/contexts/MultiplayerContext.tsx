@@ -17,6 +17,9 @@ type OnlineUser = {
   status: "online" | "offline" | "away";
   specialty?: string;
   zodiac?: string;
+  strength?: number;
+  location?: { x: number; y: number };
+  allianceId?: string;
 };
 
 type Message = {
@@ -26,17 +29,33 @@ type Message = {
   receiverId: string;
   message: string;
   timestamp: string;
+  read: boolean;
+  type?: "text" | "alliance" | "system" | "trade";
+  attachedData?: any;
 };
 
 type MultiplayerContextType = {
   onlineUsers: OnlineUser[];
   currentUserStatus: "online" | "offline" | "away";
   setUserStatus: (status: "online" | "offline" | "away") => void;
-  sendMessage: (receiverId: string, message: string) => Promise<void>;
+  sendMessage: (
+    receiverId: string,
+    message: string,
+    type?: "text" | "alliance" | "system" | "trade",
+    attachedData?: any,
+  ) => Promise<void>;
   messages: Message[];
   getMessagesWithUser: (userId: string) => Message[];
   getUserById: (userId: string) => OnlineUser | undefined;
   isUserOnline: (userId: string) => boolean;
+  markMessageAsRead: (messageId: string) => void;
+  getNearbyPlayers: (radius: number) => OnlineUser[];
+  sendAllianceMessage: (
+    allianceId: string,
+    message: string,
+    attachedData?: any,
+  ) => Promise<void>;
+  getUnreadMessageCount: (userId?: string) => number;
 };
 
 const MultiplayerContext = createContext<MultiplayerContextType | undefined>(
@@ -63,6 +82,9 @@ export function MultiplayerProvider({
       receiverId: string;
       message: string;
       timestamp: string;
+      read: boolean;
+      type?: "text" | "alliance" | "system" | "trade";
+      attachedData?: any;
     }>
   >([]);
 
@@ -117,7 +139,15 @@ export function MultiplayerProvider({
 
     // Subscribe to the messages channel
     channel.on("broadcast", { event: "message" }, ({ payload }) => {
-      if (payload.receiverId === user.id || payload.senderId === user.id) {
+      if (
+        payload.receiverId === user.id ||
+        payload.senderId === user.id ||
+        (payload.type === "alliance" &&
+          userProfile.allianceId === payload.attachedData?.allianceId)
+      ) {
+        // Auto-mark messages as read if they're from the user
+        const isRead = payload.senderId === user.id;
+
         setMessages((prev) => [
           ...prev,
           {
@@ -127,8 +157,34 @@ export function MultiplayerProvider({
             receiverId: payload.receiverId,
             message: payload.message,
             timestamp: payload.timestamp,
+            read: isRead,
+            type: payload.type || "text",
+            attachedData: payload.attachedData,
           },
         ]);
+
+        // Show notification for new messages if supported and not from self
+        if (
+          !isRead &&
+          "Notification" in window &&
+          Notification.permission === "granted"
+        ) {
+          const senderName =
+            payload.type === "alliance"
+              ? "Alliance"
+              : payload.type === "system"
+                ? "System"
+                : onlineUsers.find((u) => u.id === payload.senderId)
+                    ?.kingdomName || "Unknown Kingdom";
+
+          new Notification(`New message from ${senderName}`, {
+            body:
+              payload.message.length > 50
+                ? payload.message.substring(0, 50) + "..."
+                : payload.message,
+            icon: "/favicon.ico",
+          });
+        }
       }
     });
 
@@ -176,7 +232,12 @@ export function MultiplayerProvider({
   };
 
   // Send a message to another user
-  const sendMessage = async (receiverId: string, message: string) => {
+  const sendMessage = async (
+    receiverId: string,
+    message: string,
+    type: "text" | "alliance" | "system" | "trade" = "text",
+    attachedData?: any,
+  ) => {
     if (!presenceChannel || !user) return;
 
     const messageData = {
@@ -187,6 +248,8 @@ export function MultiplayerProvider({
       message,
       timestamp: new Date().toISOString(),
       read: false,
+      type,
+      attachedData,
     };
 
     await presenceChannel.send({
@@ -197,23 +260,23 @@ export function MultiplayerProvider({
 
     // Add to local messages
     setMessages((prev) => [...prev, messageData]);
+  };
 
-    // Show browser notification for new messages if supported
-    const receiverUser = onlineUsers.find((u) => u.id === receiverId);
-    if (
-      "Notification" in window &&
-      Notification.permission === "granted" &&
-      receiverUser
-    ) {
-      new Notification(
-        `New message from ${userProfile.kingdomName || "Your Kingdom"}`,
-        {
-          body:
-            message.length > 50 ? message.substring(0, 50) + "..." : message,
-          icon: "/favicon.ico",
-        },
-      );
-    }
+  // Send a message to all members of an alliance
+  const sendAllianceMessage = async (
+    allianceId: string,
+    message: string,
+    attachedData?: any,
+  ) => {
+    if (!presenceChannel || !user) return;
+
+    // For alliance messages, we set receiverId to a special value
+    // The actual filtering happens in the broadcast handler based on attachedData.allianceId
+    await sendMessage("alliance", message, "alliance", {
+      ...attachedData,
+      allianceId,
+      senderKingdomName: userProfile.kingdomName || "Unknown Kingdom",
+    });
   };
 
   // Set up automatic away status
@@ -311,6 +374,43 @@ export function MultiplayerProvider({
     [messages],
   );
 
+  // Mark a message as read
+  const markMessageAsRead = (messageId: string) => {
+    setMessages((prev) =>
+      prev.map((msg) => (msg.id === messageId ? { ...msg, read: true } : msg)),
+    );
+  };
+
+  // Get count of unread messages
+  const getUnreadMessageCount = (userId?: string) => {
+    if (userId) {
+      // Count unread messages from a specific user
+      return messages.filter((msg) => msg.senderId === userId && !msg.read)
+        .length;
+    } else {
+      // Count all unread messages
+      return messages.filter((msg) => msg.receiverId === user?.id && !msg.read)
+        .length;
+    }
+  };
+
+  // Get nearby players based on location
+  const getNearbyPlayers = (radius: number) => {
+    if (!userProfile.location) return [];
+
+    return onlineUsers.filter((otherUser) => {
+      // Skip if no location or same user
+      if (!otherUser.location || otherUser.id === user?.id) return false;
+
+      // Calculate distance
+      const dx = otherUser.location.x - userProfile.location.x;
+      const dy = otherUser.location.y - userProfile.location.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      return distance <= radius;
+    });
+  };
+
   const value = {
     onlineUsers,
     currentUserStatus,
@@ -320,6 +420,10 @@ export function MultiplayerProvider({
     getMessagesWithUser,
     getUserById,
     isUserOnline,
+    markMessageAsRead,
+    getNearbyPlayers,
+    sendAllianceMessage,
+    getUnreadMessageCount,
   };
 
   return (
@@ -330,10 +434,10 @@ export function MultiplayerProvider({
 }
 
 // Custom hook for accessing the multiplayer context
-export const useMultiplayer = () => {
+export function useMultiplayer() {
   const context = useContext(MultiplayerContext);
   if (context === undefined) {
     throw new Error("useMultiplayer must be used within a MultiplayerProvider");
   }
   return context;
-};
+}

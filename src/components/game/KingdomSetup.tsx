@@ -1400,6 +1400,13 @@ const KingdomSetup = ({
                               // Using /dashboard instead of / to ensure proper routing
                               setTimeout(() => {
                                 console.log("Redirecting to dashboard...");
+                                // Clear the redirect flag from localStorage
+                                localStorage.removeItem("redirectedToSetup");
+                                // Set a completed flag to prevent future redirects
+                                localStorage.setItem(
+                                  "kingdomSetupCompleted",
+                                  "true",
+                                );
                                 navigate("/dashboard", { replace: true });
                               }, 1500);
                             } catch (err: any) {

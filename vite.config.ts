@@ -14,7 +14,7 @@ export default defineConfig({
   },
   plugins: [
     react({
-      fastRefresh: false,
+      plugins: [["@swc/plugin-emotion", {}]],
     }),
     tempo(),
   ],
@@ -27,5 +27,9 @@ export default defineConfig({
   server: {
     // @ts-ignore
     allowedHosts: true,
+  },
+  esbuild: {
+    jsx: "automatic",
+    jsxImportSource: "react",
   },
 });

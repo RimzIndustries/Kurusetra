@@ -6,14 +6,33 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
+  CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Users,
   MessageSquare,
@@ -22,7 +41,39 @@ import {
   Sword,
   Clock,
   Flag,
+  VoteIcon,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
+
+// Define types for proposals and votes
+type VoteValue = "yes" | "no" | "abstain";
+
+type Vote = {
+  id: string;
+  proposalId: string;
+  memberId: number;
+  value: VoteValue;
+  timestamp: string;
+};
+
+type ProposalStatus = "active" | "passed" | "rejected" | "expired";
+
+type Proposal = {
+  id: string;
+  title: string;
+  description: string;
+  createdBy: number;
+  createdAt: string;
+  expiresAt: string;
+  status: ProposalStatus;
+  category: "war" | "alliance" | "resource" | "diplomacy" | "other";
+  votes: Vote[];
+  requiredVotes: number;
+};
 
 const DewanRaja = () => {
   // Alliance members data with real-time status tracking
@@ -190,6 +241,155 @@ const DewanRaja = () => {
   const [messageType, setMessageType] = useState("regular");
   const [isTyping, setIsTyping] = useState(false);
 
+  // Proposals state
+  const [proposals, setProposals] = useState<Proposal[]>([
+    {
+      id: "prop_1",
+      title: "Alliance with Astina Kingdom",
+      description:
+        "Form a defensive alliance with Astina Kingdom to protect our northern borders.",
+      createdBy: 1, // Arjuna
+      createdAt: "2023-06-15T10:30:00Z",
+      expiresAt: "2023-06-18T10:30:00Z",
+      status: "active",
+      category: "alliance",
+      votes: [
+        {
+          id: "vote_1",
+          proposalId: "prop_1",
+          memberId: 1,
+          value: "yes",
+          timestamp: "2023-06-15T10:35:00Z",
+        },
+        {
+          id: "vote_2",
+          proposalId: "prop_1",
+          memberId: 2,
+          value: "yes",
+          timestamp: "2023-06-15T11:20:00Z",
+        },
+        {
+          id: "vote_3",
+          proposalId: "prop_1",
+          memberId: 3,
+          value: "no",
+          timestamp: "2023-06-15T12:45:00Z",
+        },
+      ],
+      requiredVotes: 4,
+    },
+    {
+      id: "prop_2",
+      title: "Attack on Kurawa Stronghold",
+      description:
+        "Launch a coordinated attack on the Kurawa stronghold in the Eastern Mountains.",
+      createdBy: 2, // Kresna
+      createdAt: "2023-06-14T14:20:00Z",
+      expiresAt: "2023-06-17T14:20:00Z",
+      status: "active",
+      category: "war",
+      votes: [
+        {
+          id: "vote_4",
+          proposalId: "prop_2",
+          memberId: 1,
+          value: "yes",
+          timestamp: "2023-06-14T15:10:00Z",
+        },
+        {
+          id: "vote_5",
+          proposalId: "prop_2",
+          memberId: 2,
+          value: "yes",
+          timestamp: "2023-06-14T14:25:00Z",
+        },
+        {
+          id: "vote_6",
+          proposalId: "prop_2",
+          memberId: 4,
+          value: "yes",
+          timestamp: "2023-06-14T16:30:00Z",
+        },
+        {
+          id: "vote_7",
+          proposalId: "prop_2",
+          memberId: 3,
+          value: "abstain",
+          timestamp: "2023-06-14T18:15:00Z",
+        },
+      ],
+      requiredVotes: 4,
+    },
+    {
+      id: "prop_3",
+      title: "Resource Sharing Agreement",
+      description:
+        "Establish a resource sharing agreement among alliance members to boost production.",
+      createdBy: 3, // Bima
+      createdAt: "2023-06-13T09:45:00Z",
+      expiresAt: "2023-06-16T09:45:00Z",
+      status: "passed",
+      category: "resource",
+      votes: [
+        {
+          id: "vote_8",
+          proposalId: "prop_3",
+          memberId: 1,
+          value: "yes",
+          timestamp: "2023-06-13T10:20:00Z",
+        },
+        {
+          id: "vote_9",
+          proposalId: "prop_3",
+          memberId: 2,
+          value: "yes",
+          timestamp: "2023-06-13T11:05:00Z",
+        },
+        {
+          id: "vote_10",
+          proposalId: "prop_3",
+          memberId: 3,
+          value: "yes",
+          timestamp: "2023-06-13T09:50:00Z",
+        },
+        {
+          id: "vote_11",
+          proposalId: "prop_3",
+          memberId: 4,
+          value: "yes",
+          timestamp: "2023-06-13T14:30:00Z",
+        },
+        {
+          id: "vote_12",
+          proposalId: "prop_3",
+          memberId: 5,
+          value: "abstain",
+          timestamp: "2023-06-13T16:45:00Z",
+        },
+      ],
+      requiredVotes: 4,
+    },
+  ]);
+
+  // New proposal form state
+  const [newProposal, setNewProposal] = useState({
+    title: "",
+    description: "",
+    category: "other" as
+      | "war"
+      | "alliance"
+      | "resource"
+      | "diplomacy"
+      | "other",
+  });
+
+  // Dialog state
+  const [isProposalDialogOpen, setIsProposalDialogOpen] = useState(false);
+  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(
+    null,
+  );
+  const [voteValue, setVoteValue] = useState<VoteValue>("yes");
+
   // Simulate other users typing
   useEffect(() => {
     const typingInterval = setInterval(() => {
@@ -318,10 +518,11 @@ const DewanRaja = () => {
         >
           {/* Decorative accent */}
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-primary to-yellow-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
-          <TabsList className="grid w-full grid-cols-3 mb-6 bg-muted/50 p-1 rounded-lg overflow-hidden shadow-inner">
+          <TabsList className="grid w-full grid-cols-4 mb-6 bg-muted/50 p-1 rounded-lg overflow-hidden shadow-inner">
             <TabsTrigger value="chat">Alliance Chat</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="wars">Alliance Wars</TabsTrigger>
+            <TabsTrigger value="proposals">Proposals</TabsTrigger>
           </TabsList>
 
           <TabsContent value="chat" className="space-y-6">
@@ -656,6 +857,602 @@ const DewanRaja = () => {
                   <Flag className="h-4 w-4 mr-2" /> Declare New War
                 </Button>
               </CardFooter>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="proposals" className="space-y-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle>Alliance Proposals</CardTitle>
+                  <CardDescription>
+                    Vote on important decisions for our alliance
+                  </CardDescription>
+                </div>
+                <Dialog
+                  open={isProposalDialogOpen}
+                  onOpenChange={setIsProposalDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900">
+                      <VoteIcon className="h-4 w-4 mr-2" /> New Proposal
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create New Proposal</DialogTitle>
+                      <DialogDescription>
+                        Submit a new proposal for alliance members to vote on.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <label htmlFor="title" className="text-sm font-medium">
+                          Title
+                        </label>
+                        <Input
+                          id="title"
+                          placeholder="Enter proposal title"
+                          value={newProposal.title}
+                          onChange={(e) =>
+                            setNewProposal({
+                              ...newProposal,
+                              title: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="category"
+                          className="text-sm font-medium"
+                        >
+                          Category
+                        </label>
+                        <Select
+                          value={newProposal.category}
+                          onValueChange={(value) =>
+                            setNewProposal({
+                              ...newProposal,
+                              category: value as any,
+                            })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="war">War</SelectItem>
+                            <SelectItem value="alliance">Alliance</SelectItem>
+                            <SelectItem value="resource">Resource</SelectItem>
+                            <SelectItem value="diplomacy">Diplomacy</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="description"
+                          className="text-sm font-medium"
+                        >
+                          Description
+                        </label>
+                        <Textarea
+                          id="description"
+                          placeholder="Describe your proposal in detail"
+                          rows={5}
+                          value={newProposal.description}
+                          onChange={(e) =>
+                            setNewProposal({
+                              ...newProposal,
+                              description: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsProposalDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          // Create new proposal
+                          const newProposalObj: Proposal = {
+                            id: `prop_${Date.now()}`,
+                            title: newProposal.title,
+                            description: newProposal.description,
+                            createdBy: 1, // Assuming current user is Arjuna (id: 1)
+                            createdAt: new Date().toISOString(),
+                            expiresAt: new Date(
+                              Date.now() + 3 * 24 * 60 * 60 * 1000,
+                            ).toISOString(), // 3 days from now
+                            status: "active",
+                            category: newProposal.category,
+                            votes: [],
+                            requiredVotes: Math.ceil(members.length / 2), // Majority required
+                          };
+
+                          // Add to proposals
+                          setProposals([...proposals, newProposalObj]);
+
+                          // Reset form
+                          setNewProposal({
+                            title: "",
+                            description: "",
+                            category: "other",
+                          });
+
+                          // Close dialog
+                          setIsProposalDialogOpen(false);
+                        }}
+                        disabled={
+                          !newProposal.title || !newProposal.description
+                        }
+                      >
+                        Submit Proposal
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="active" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 mb-4">
+                    <TabsTrigger value="active">Active</TabsTrigger>
+                    <TabsTrigger value="passed">Passed</TabsTrigger>
+                    <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="active">
+                    <ScrollArea className="h-[400px] pr-4">
+                      <div className="space-y-4">
+                        {proposals
+                          .filter((p) => p.status === "active")
+                          .map((proposal) => (
+                            <Card
+                              key={proposal.id}
+                              className="overflow-hidden border-l-4"
+                              style={{
+                                borderLeftColor:
+                                  proposal.category === "war"
+                                    ? "#ef4444"
+                                    : proposal.category === "alliance"
+                                      ? "#3b82f6"
+                                      : proposal.category === "resource"
+                                        ? "#22c55e"
+                                        : proposal.category === "diplomacy"
+                                          ? "#f59e0b"
+                                          : "#6b7280",
+                              }}
+                            >
+                              <CardHeader className="pb-2">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <CardTitle className="text-lg">
+                                      {proposal.title}
+                                    </CardTitle>
+                                    <CardDescription>
+                                      Proposed by{" "}
+                                      {members.find(
+                                        (m) => m.id === proposal.createdBy,
+                                      )?.name || "Unknown"}{" "}
+                                      •{" "}
+                                      {new Date(
+                                        proposal.createdAt,
+                                      ).toLocaleDateString()}
+                                    </CardDescription>
+                                  </div>
+                                  <Badge
+                                    variant="outline"
+                                    className="capitalize"
+                                  >
+                                    {proposal.category}
+                                  </Badge>
+                                </div>
+                              </CardHeader>
+                              <CardContent className="pb-2">
+                                <p className="text-sm text-muted-foreground mb-4">
+                                  {proposal.description}
+                                </p>
+
+                                <div className="space-y-2">
+                                  <div className="flex justify-between text-sm">
+                                    <span>
+                                      Votes: {proposal.votes.length} of{" "}
+                                      {proposal.requiredVotes} required
+                                    </span>
+                                    <span>
+                                      Expires:{" "}
+                                      {new Date(
+                                        proposal.expiresAt,
+                                      ).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  <Progress
+                                    value={
+                                      (proposal.votes.length /
+                                        proposal.requiredVotes) *
+                                      100
+                                    }
+                                    className="h-2"
+                                  />
+
+                                  <div className="flex justify-between items-center mt-4">
+                                    <div className="flex space-x-2">
+                                      <Badge
+                                        variant="outline"
+                                        className="flex items-center gap-1 bg-green-50"
+                                      >
+                                        <ThumbsUp className="h-3 w-3 text-green-600" />
+                                        <span>
+                                          {
+                                            proposal.votes.filter(
+                                              (v) => v.value === "yes",
+                                            ).length
+                                          }
+                                        </span>
+                                      </Badge>
+                                      <Badge
+                                        variant="outline"
+                                        className="flex items-center gap-1 bg-red-50"
+                                      >
+                                        <ThumbsDown className="h-3 w-3 text-red-600" />
+                                        <span>
+                                          {
+                                            proposal.votes.filter(
+                                              (v) => v.value === "no",
+                                            ).length
+                                          }
+                                        </span>
+                                      </Badge>
+                                      <Badge
+                                        variant="outline"
+                                        className="flex items-center gap-1 bg-gray-50"
+                                      >
+                                        <AlertCircle className="h-3 w-3 text-gray-600" />
+                                        <span>
+                                          {
+                                            proposal.votes.filter(
+                                              (v) => v.value === "abstain",
+                                            ).length
+                                          }
+                                        </span>
+                                      </Badge>
+                                    </div>
+
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            setSelectedProposal(proposal)
+                                          }
+                                          disabled={proposal.votes.some(
+                                            (v) => v.memberId === 1,
+                                          )} // Disable if current user (Arjuna) already voted
+                                        >
+                                          {proposal.votes.some(
+                                            (v) => v.memberId === 1,
+                                          )
+                                            ? "Voted"
+                                            : "Cast Vote"}
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent>
+                                        <DialogHeader>
+                                          <DialogTitle>
+                                            Vote on Proposal
+                                          </DialogTitle>
+                                          <DialogDescription>
+                                            {proposal.title}
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="py-4">
+                                          <p className="text-sm mb-4">
+                                            {proposal.description}
+                                          </p>
+                                          <div className="space-y-2">
+                                            <label className="text-sm font-medium">
+                                              Your Vote
+                                            </label>
+                                            <Select
+                                              defaultValue="yes"
+                                              onValueChange={(value) =>
+                                                setVoteValue(value as VoteValue)
+                                              }
+                                            >
+                                              <SelectTrigger>
+                                                <SelectValue placeholder="Select your vote" />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                <SelectItem value="yes">
+                                                  Approve
+                                                </SelectItem>
+                                                <SelectItem value="no">
+                                                  Reject
+                                                </SelectItem>
+                                                <SelectItem value="abstain">
+                                                  Abstain
+                                                </SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+                                        </div>
+                                        <DialogFooter>
+                                          <Button variant="outline">
+                                            Cancel
+                                          </Button>
+                                          <Button
+                                            onClick={() => {
+                                              if (!selectedProposal) return;
+
+                                              // Create new vote
+                                              const newVote: Vote = {
+                                                id: `vote_${Date.now()}`,
+                                                proposalId: selectedProposal.id,
+                                                memberId: 1, // Assuming current user is Arjuna (id: 1)
+                                                value: voteValue,
+                                                timestamp:
+                                                  new Date().toISOString(),
+                                              };
+
+                                              // Add vote to proposal
+                                              setProposals(
+                                                proposals.map((p) =>
+                                                  p.id === selectedProposal.id
+                                                    ? {
+                                                        ...p,
+                                                        votes: [
+                                                          ...p.votes,
+                                                          newVote,
+                                                        ],
+                                                      }
+                                                    : p,
+                                                ),
+                                              );
+                                            }}
+                                          >
+                                            Submit Vote
+                                          </Button>
+                                        </DialogFooter>
+                                      </DialogContent>
+                                    </Dialog>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+
+                        {proposals.filter((p) => p.status === "active")
+                          .length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <VoteIcon className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                            <p>No active proposals</p>
+                            <p className="text-sm">
+                              Create a new proposal for the alliance to vote on
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+
+                  <TabsContent value="passed">
+                    <ScrollArea className="h-[400px] pr-4">
+                      <div className="space-y-4">
+                        {proposals
+                          .filter((p) => p.status === "passed")
+                          .map((proposal) => (
+                            <Card
+                              key={proposal.id}
+                              className="overflow-hidden border-l-4 border-l-green-500"
+                            >
+                              <CardHeader className="pb-2">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <CardTitle className="text-lg">
+                                        {proposal.title}
+                                      </CardTitle>
+                                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                    </div>
+                                    <CardDescription>
+                                      Proposed by{" "}
+                                      {members.find(
+                                        (m) => m.id === proposal.createdBy,
+                                      )?.name || "Unknown"}{" "}
+                                      •{" "}
+                                      {new Date(
+                                        proposal.createdAt,
+                                      ).toLocaleDateString()}
+                                    </CardDescription>
+                                  </div>
+                                  <Badge
+                                    variant="outline"
+                                    className="capitalize"
+                                  >
+                                    {proposal.category}
+                                  </Badge>
+                                </div>
+                              </CardHeader>
+                              <CardContent>
+                                <p className="text-sm text-muted-foreground">
+                                  {proposal.description}
+                                </p>
+
+                                <div className="flex justify-between items-center mt-4">
+                                  <div className="flex space-x-2">
+                                    <Badge
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-green-50"
+                                    >
+                                      <ThumbsUp className="h-3 w-3 text-green-600" />
+                                      <span>
+                                        {
+                                          proposal.votes.filter(
+                                            (v) => v.value === "yes",
+                                          ).length
+                                        }
+                                      </span>
+                                    </Badge>
+                                    <Badge
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-red-50"
+                                    >
+                                      <ThumbsDown className="h-3 w-3 text-red-600" />
+                                      <span>
+                                        {
+                                          proposal.votes.filter(
+                                            (v) => v.value === "no",
+                                          ).length
+                                        }
+                                      </span>
+                                    </Badge>
+                                    <Badge
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-gray-50"
+                                    >
+                                      <AlertCircle className="h-3 w-3 text-gray-600" />
+                                      <span>
+                                        {
+                                          proposal.votes.filter(
+                                            (v) => v.value === "abstain",
+                                          ).length
+                                        }
+                                      </span>
+                                    </Badge>
+                                  </div>
+
+                                  <Button variant="outline" size="sm">
+                                    View Details
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+
+                        {proposals.filter((p) => p.status === "passed")
+                          .length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <CheckCircle2 className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                            <p>No passed proposals</p>
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+
+                  <TabsContent value="rejected">
+                    <ScrollArea className="h-[400px] pr-4">
+                      <div className="space-y-4">
+                        {proposals
+                          .filter((p) => p.status === "rejected")
+                          .map((proposal) => (
+                            <Card
+                              key={proposal.id}
+                              className="overflow-hidden border-l-4 border-l-red-500"
+                            >
+                              <CardHeader className="pb-2">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <CardTitle className="text-lg">
+                                        {proposal.title}
+                                      </CardTitle>
+                                      <XCircle className="h-4 w-4 text-red-600" />
+                                    </div>
+                                    <CardDescription>
+                                      Proposed by{" "}
+                                      {members.find(
+                                        (m) => m.id === proposal.createdBy,
+                                      )?.name || "Unknown"}{" "}
+                                      •{" "}
+                                      {new Date(
+                                        proposal.createdAt,
+                                      ).toLocaleDateString()}
+                                    </CardDescription>
+                                  </div>
+                                  <Badge
+                                    variant="outline"
+                                    className="capitalize"
+                                  >
+                                    {proposal.category}
+                                  </Badge>
+                                </div>
+                              </CardHeader>
+                              <CardContent>
+                                <p className="text-sm text-muted-foreground">
+                                  {proposal.description}
+                                </p>
+
+                                <div className="flex justify-between items-center mt-4">
+                                  <div className="flex space-x-2">
+                                    <Badge
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-green-50"
+                                    >
+                                      <ThumbsUp className="h-3 w-3 text-green-600" />
+                                      <span>
+                                        {
+                                          proposal.votes.filter(
+                                            (v) => v.value === "yes",
+                                          ).length
+                                        }
+                                      </span>
+                                    </Badge>
+                                    <Badge
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-red-50"
+                                    >
+                                      <ThumbsDown className="h-3 w-3 text-red-600" />
+                                      <span>
+                                        {
+                                          proposal.votes.filter(
+                                            (v) => v.value === "no",
+                                          ).length
+                                        }
+                                      </span>
+                                    </Badge>
+                                    <Badge
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-gray-50"
+                                    >
+                                      <AlertCircle className="h-3 w-3 text-gray-600" />
+                                      <span>
+                                        {
+                                          proposal.votes.filter(
+                                            (v) => v.value === "abstain",
+                                          ).length
+                                        }
+                                      </span>
+                                    </Badge>
+                                  </div>
+
+                                  <Button variant="outline" size="sm">
+                                    View Details
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+
+                        {proposals.filter((p) => p.status === "rejected")
+                          .length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <XCircle className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                            <p>No rejected proposals</p>
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
