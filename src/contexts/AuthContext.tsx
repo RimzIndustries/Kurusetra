@@ -211,23 +211,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
-      // Update local state
+      // Update local state immediately for a responsive UI
       setUserProfile((prev) => ({ ...prev, ...profile }));
 
-      // Update in database
-      const { error } = await supabase.from("user_profiles").upsert(
-        {
-          user_id: user.id,
-          race: profile.race || userProfile.race,
-          kingdom_name: profile.kingdomName || userProfile.kingdomName,
-          zodiac: profile.zodiac || userProfile.zodiac,
-          specialty: profile.specialty || userProfile.specialty,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" },
-      );
+      // Prepare data for database update
+      const updateData = {
+        user_id: user.id,
+        race: profile.race || userProfile.race,
+        kingdom_name: profile.kingdomName || userProfile.kingdomName,
+        zodiac: profile.zodiac || userProfile.zodiac,
+        specialty: profile.specialty || userProfile.specialty,
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
+      console.log("Updating user profile in database:", updateData);
+
+      // Update in database
+      const { error } = await supabase
+        .from("user_profiles")
+        .upsert(updateData, { onConflict: "user_id" });
+
+      if (error) {
+        console.error("Database error updating profile:", error);
+        throw error;
+      }
+
+      console.log("User profile updated successfully");
     } catch (error) {
       console.error("Error updating user profile:", error);
       throw error;
@@ -235,7 +244,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const hasCompletedSetup = () => {
-    return !!(userProfile.race && userProfile.kingdomName);
+    console.log("Checking if setup completed:", userProfile);
+    return !!(userProfile?.race && userProfile?.kingdomName);
   };
 
   const isNewUser = () => {
@@ -258,12 +268,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Custom hook must be a named function declaration at the top level for Fast Refresh compatibility
-export function useAuth() {
+// Custom hook for accessing the auth context
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
-// This ensures the hook is properly recognized by Fast Refresh
+};

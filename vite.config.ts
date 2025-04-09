@@ -14,9 +14,7 @@ export default defineConfig({
   },
   plugins: [
     react({
-      fastRefresh: {
-        exclude: [/MultiplayerContext\.tsx$/],
-      },
+      fastRefresh: false,
     }),
     tempo(),
   ],

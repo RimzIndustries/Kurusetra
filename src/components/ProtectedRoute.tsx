@@ -67,6 +67,14 @@ export default function ProtectedRoute({
     return <Navigate to="/setup-kingdom" replace state={{ from: location }} />;
   }
 
+  // If we're on the setup page but setup is already completed, redirect to dashboard
+  if (hasCompletedSetup() && location.pathname === "/setup-kingdom") {
+    console.log(
+      "ProtectedRoute: Setup already completed, redirecting to dashboard",
+    );
+    return <Navigate to="/dashboard" replace />;
+  }
+
   console.log("ProtectedRoute: All checks passed, rendering outlet");
   // Render children routes if authenticated
   return <Outlet />;

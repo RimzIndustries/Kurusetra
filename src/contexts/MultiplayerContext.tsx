@@ -329,12 +329,11 @@ export function MultiplayerProvider({
   );
 }
 
-// Custom hook must be a named function declaration at the top level for Fast Refresh compatibility
-export function useMultiplayer() {
+// Custom hook for accessing the multiplayer context
+export const useMultiplayer = () => {
   const context = useContext(MultiplayerContext);
   if (context === undefined) {
     throw new Error("useMultiplayer must be used within a MultiplayerProvider");
   }
   return context;
-}
-// This ensures the hook is properly recognized by Fast Refresh
+};

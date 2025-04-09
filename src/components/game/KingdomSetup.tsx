@@ -475,6 +475,15 @@ const KingdomSetup = ({
                   Your journey in the Kurusetra universe begins now.
                 </motion.p>
 
+                <motion.p
+                  className="text-center text-sm text-green-600 mt-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.9 }}
+                >
+                  Redirecting to your kingdom dashboard...
+                </motion.p>
+
                 {/* Success sparkles */}
                 <motion.div
                   className="absolute top-5 left-5"
@@ -1363,22 +1372,38 @@ const KingdomSetup = ({
                         // Show success animation before navigating
                         e.preventDefault();
                         setLoading(true);
+                        console.log("Starting kingdom creation process...");
                         setTimeout(() => {
                           setShowSuccess(true);
+                          console.log("Showing success animation...");
                           setTimeout(async () => {
                             try {
+                              // Save all kingdom data to user profile
                               await updateUserProfile({
                                 race: selectedRace,
                                 kingdomName: kingdomName.trim(),
-                                kingdomDescription: kingdomDescription.trim(),
-                                kingdomMotto: kingdomMotto.trim(),
-                                kingdomCapital: kingdomCapital.trim(),
-                                specialty: raceDetails.specialty,
                                 zodiac: selectedZodiac,
+                                specialty: raceDetails.specialty,
                               });
+
+                              // Log the data being saved for debugging
+                              console.log("Kingdom setup data saved:", {
+                                race: selectedRace,
+                                kingdomName: kingdomName.trim(),
+                                zodiac: selectedZodiac,
+                                specialty: raceDetails.specialty,
+                              });
+
+                              console.log("Kingdom data saved successfully!");
+
                               // Navigate to dashboard after showing success animation (1.5 second delay)
-                              setTimeout(() => navigate("/dashboard"), 1500);
+                              // Using /dashboard instead of / to ensure proper routing
+                              setTimeout(() => {
+                                console.log("Redirecting to dashboard...");
+                                navigate("/dashboard", { replace: true });
+                              }, 1500);
                             } catch (err: any) {
+                              console.error("Error saving kingdom data:", err);
                               setShowSuccess(false);
                               setError(
                                 err.message ||
