@@ -834,7 +834,7 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
           <TabsList className="grid w-full grid-cols-2 mb-10 p-1 bg-neuro-bg shadow-neuro-concave rounded-xl overflow-hidden relative">
             <TabsTrigger
               value="warfare"
-              className="flex items-center gap-2 py-4 transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-transparent data-[state=active]:to-muted/80"
+              className="flex items-center justify-center gap-2 py-4 transition-all duration-300 data-[state=active]:bg-neuro-primary/10 data-[state=active]:text-neuro-primary data-[state=active]:shadow-neuro-flat hover:bg-neuro-primary/5 neuro-hover"
             >
               <motion.div
                 whileHover={{ scale: 1.2, rotate: 10 }}
@@ -846,7 +846,7 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
             </TabsTrigger>
             <TabsTrigger
               value="espionage"
-              className="flex items-center gap-2 py-4 transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-transparent data-[state=active]:to-muted/80"
+              className="flex items-center justify-center gap-2 py-4 transition-all duration-300 data-[state=active]:bg-neuro-primary/10 data-[state=active]:text-neuro-primary data-[state=active]:shadow-neuro-flat hover:bg-neuro-primary/5 neuro-hover"
             >
               <motion.div
                 whileHover={{ scale: 1.2 }}
@@ -1079,9 +1079,8 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
                               {/* Scout button */}
                               <div className="mt-4">
                                 <Button
-                                  variant="outline"
                                   size="sm"
-                                  className="w-full text-xs flex items-center justify-center gap-1"
+                                  className="w-full text-xs flex items-center justify-center gap-1 bg-neuro-bg text-neuro-primary shadow-neuro-flat hover:shadow-neuro-pressed border-neuro-primary/20"
                                   onClick={() =>
                                     setShowScoutingInterface(
                                       !showScoutingInterface,
@@ -1175,7 +1174,7 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
 
                                     <Button
                                       size="sm"
-                                      className="w-full mt-2 text-xs flex items-center justify-center gap-1"
+                                      className="w-full mt-2 text-xs flex items-center justify-center gap-1 bg-neuro-bg text-neuro-primary shadow-neuro-flat hover:shadow-neuro-pressed border-neuro-primary/20"
                                       disabled={
                                         Object.values(selectedSpies).reduce(
                                           (sum, val) => sum + val,
@@ -1527,8 +1526,7 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
                         className="w-full"
                       >
                         <Button
-                          variant="neuro-convex"
-                          className="w-full py-6 text-base font-semibold transition-all duration-300 bg-neuro-bg text-foreground relative overflow-hidden group"
+                          className="w-full py-6 text-base font-semibold transition-all duration-300 bg-neuro-bg text-neuro-primary shadow-neuro-flat hover:shadow-neuro-pressed border-neuro-primary/20 relative overflow-hidden group"
                           disabled={
                             !selectedKingdom ||
                             (combatType === "warfare"
@@ -1591,12 +1589,12 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter className="mt-4">
-                        <AlertDialogCancel className="font-medium">
+                        <AlertDialogCancel className="border-neuro-primary/30 text-foreground hover:bg-neuro-primary/10 font-medium">
                           Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction
                           onClick={handleLaunchAttack}
-                          className="bg-primary hover:bg-primary/90 font-medium"
+                          className="bg-neuro-bg text-neuro-primary shadow-neuro-flat hover:shadow-neuro-pressed border-neuro-primary/20 font-medium"
                         >
                           Confirm
                         </AlertDialogAction>
