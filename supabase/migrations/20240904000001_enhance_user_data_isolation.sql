@@ -29,15 +29,15 @@ CREATE POLICY "Users can only access their own buildings"
 -- Ensure each user can only access troops for their own kingdom
 DROP POLICY IF EXISTS "Users can only access their own troops" ON troops;
 CREATE POLICY "Users can only access their own troops"
-  FOR ALL
   ON troops
+  FOR ALL
   USING ((SELECT user_id FROM kingdoms WHERE id = kingdom_id) = auth.uid());
 
 -- For attacks table, users can see attacks where they are either the attacker or defender
 DROP POLICY IF EXISTS "Users can see attacks involving their kingdom" ON attacks;
 CREATE POLICY "Users can see attacks involving their kingdom"
-  FOR SELECT
   ON attacks
+  FOR SELECT
   USING (
     (SELECT user_id FROM kingdoms WHERE id = source_kingdom_id) = auth.uid() OR
     (SELECT user_id FROM kingdoms WHERE id = target_kingdom_id) = auth.uid()
@@ -46,8 +46,8 @@ CREATE POLICY "Users can see attacks involving their kingdom"
 -- Users can only create attacks where they are the attacker
 DROP POLICY IF EXISTS "Users can only create attacks from their kingdom" ON attacks;
 CREATE POLICY "Users can only create attacks from their kingdom"
-  FOR INSERT
   ON attacks
+  FOR INSERT
   WITH CHECK ((SELECT user_id FROM kingdoms WHERE id = source_kingdom_id) = auth.uid());
 
 -- Enable RLS on all tables
