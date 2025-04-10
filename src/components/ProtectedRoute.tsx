@@ -64,23 +64,24 @@ export default function ProtectedRoute({
   // Skip this check if already on the setup page to avoid redirect loops
   if (!hasCompletedSetup() && location.pathname !== "/setup-kingdom") {
     console.log("ProtectedRoute: Setup not completed, redirecting to setup");
-    // Store a flag in localStorage to prevent multiple redirects
-    localStorage.setItem("redirectedToSetup", "true");
+    // Remove any flags that might prevent redirection
+    localStorage.removeItem("redirectedToSetup");
     return <Navigate to="/setup-kingdom" replace state={{ from: location }} />;
   }
 
   // If setup is already completed, redirect to dashboard from setup page or login page
-  if (
-    hasCompletedSetup() ||
-    localStorage.getItem("kingdomSetupCompleted") === "true"
-  ) {
-    // If user is on setup page or just logged in (coming from login), redirect to dashboard
-    if (
-      location.pathname === "/setup-kingdom" ||
-      location.state?.from?.pathname === "/login"
-    ) {
+  if (hasCompletedSetup()) {
+    // If user is on setup page, redirect to dashboard
+    if (location.pathname === "/setup-kingdom") {
       console.log(
         "ProtectedRoute: Setup already completed, redirecting to dashboard",
+      );
+      return <Navigate to="/dashboard" replace />;
+    }
+    // If user just logged in (coming from login), redirect to dashboard
+    if (location.state?.from?.pathname === "/login") {
+      console.log(
+        "ProtectedRoute: User logged in and setup already completed, redirecting to dashboard",
       );
       return <Navigate to="/dashboard" replace />;
     }
