@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { useRoutes, Routes, Route } from "react-router-dom";
+import { useRoutes, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./components/home";
 import ResourceManagement from "./components/game/ResourceManagement";
 import Building from "./components/game/Building";
@@ -34,6 +34,10 @@ function AppRoutes() {
               {/* Public routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route
+                path="/logout"
+                element={<Navigate to="/login" replace />}
+              />
 
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>

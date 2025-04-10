@@ -14,13 +14,19 @@ import { useAuth } from "../contexts/AuthContext";
 import { Button } from "./ui/button";
 
 const Navigation = () => {
+  console.log("Navigation component rendered");
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
 
   const handleLogout = async () => {
     try {
+      console.log("Logging out user...");
       await signOut();
+      // Clear any stored kingdom setup flags
+      localStorage.removeItem("kingdomSetupCompleted");
+      localStorage.removeItem("redirectedToSetup");
+      // Force navigation to login page
       navigate("/login", { replace: true });
     } catch (error) {
       console.error("Logout error:", error);

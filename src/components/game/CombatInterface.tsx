@@ -834,27 +834,33 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
           <TabsList className="grid w-full grid-cols-2 mb-10 p-1 bg-neuro-bg shadow-neuro-concave rounded-xl overflow-hidden relative">
             <TabsTrigger
               value="warfare"
-              className="flex items-center justify-center gap-2 py-4 transition-all duration-300 data-[state=active]:bg-neuro-primary/10 data-[state=active]:text-neuro-primary data-[state=active]:shadow-neuro-flat hover:bg-neuro-primary/5 neuro-hover"
+              className="data-[state=active]:bg-neuro-primary/10 data-[state=active]:text-neuro-primary"
             >
               <motion.div
                 whileHover={{ scale: 1.2, rotate: 10 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                className="flex-shrink-0"
               >
                 <Sword className="h-5 w-5 text-red-500" />
               </motion.div>
-              <span className="font-medium">Direct Warfare</span>
+              <span className="font-medium text-base flex-grow text-center">
+                Direct Warfare
+              </span>
             </TabsTrigger>
             <TabsTrigger
               value="espionage"
-              className="flex items-center justify-center gap-2 py-4 transition-all duration-300 data-[state=active]:bg-neuro-primary/10 data-[state=active]:text-neuro-primary data-[state=active]:shadow-neuro-flat hover:bg-neuro-primary/5 neuro-hover"
+              className="data-[state=active]:bg-neuro-primary/10 data-[state=active]:text-neuro-primary"
             >
               <motion.div
                 whileHover={{ scale: 1.2 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                className="flex-shrink-0"
               >
                 <Eye className="h-5 w-5 text-blue-500" />
               </motion.div>
-              <span className="font-medium">Covert Operations</span>
+              <span className="font-medium text-base flex-grow text-center">
+                Covert Operations
+              </span>
             </TabsTrigger>
           </TabsList>
 

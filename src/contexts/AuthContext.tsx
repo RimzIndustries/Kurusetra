@@ -29,6 +29,7 @@ type AuthContextType = {
   }>;
   signOut: () => Promise<void>;
   updateUserProfile: (profile: UserProfile) => Promise<void>;
+  fetchUserProfile: (userId: string) => Promise<boolean>;
   hasCompletedSetup: () => boolean;
   isNewUser: () => boolean;
 };
@@ -45,6 +46,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile>({});
   const [loading, setLoading] = useState(true);
 
+  // Function to fetch user profile data
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from("user_profiles")
+        .select("race, kingdom_name, zodiac, specialty")
+        .eq("user_id", userId)
+        .single();
+
+      if (profileError && profileError.code !== "PGRST116") {
+        console.error("Error fetching user profile:", profileError);
+        return false;
+      }
+
+      if (profileData) {
+        setUserProfile({
+          race: profileData.race,
+          kingdomName: profileData.kingdom_name,
+          zodiac: profileData.zodiac,
+          specialty: profileData.specialty,
+        });
+        console.log("AuthContext: User profile loaded", !!profileData);
+        return true;
+      } else {
+        // If no profile data, create an empty profile
+        setUserProfile({});
+        return false;
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     console.log("AuthContext: Initializing auth state");
     // Check for active session on mount
@@ -60,35 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Fetch user profile data if user is logged in
         if (currentUser) {
-          try {
-            const { data: profileData, error: profileError } = await supabase
-              .from("user_profiles")
-              .select("race, kingdom_name, zodiac, specialty")
-              .eq("user_id", currentUser.id)
-              .single();
-
-            if (profileError && profileError.code !== "PGRST116") {
-              console.error("Error fetching user profile:", profileError);
-              // Still set loading to false even if there's an error fetching profile
-              setLoading(false);
-              return;
-            }
-
-            if (profileData) {
-              setUserProfile({
-                race: profileData.race,
-                kingdomName: profileData.kingdom_name,
-                zodiac: profileData.zodiac,
-                specialty: profileData.specialty,
-              });
-              console.log("AuthContext: User profile loaded", !!profileData);
-            } else {
-              // If no profile data, still create an empty profile
-              setUserProfile({});
-            }
-          } catch (error) {
-            console.error("Error fetching user profile:", error);
-          }
+          await fetchUserProfile(currentUser.id);
         }
       } catch (error) {
         console.error("Session error:", error);
@@ -116,36 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           } else {
             // Fetch user profile data if user is logged in
-            try {
-              const { data: profileData, error: profileError } = await supabase
-                .from("user_profiles")
-                .select("race, kingdom_name, zodiac, specialty")
-                .eq("user_id", currentUser.id)
-                .single();
-
-              if (profileError && profileError.code !== "PGRST116") {
-                console.error("Error fetching user profile:", profileError);
-                // Still set loading to false even if there's an error fetching profile
-                setLoading(false);
-                return;
-              }
-
-              if (profileData) {
-                setUserProfile({
-                  race: profileData.race,
-                  kingdomName: profileData.kingdom_name,
-                  zodiac: profileData.zodiac,
-                  specialty: profileData.specialty,
-                });
-              } else {
-                // If no profile data, still create an empty profile
-                setUserProfile({});
-              }
-            } catch (error) {
-              console.error("Error fetching user profile:", error);
-              setLoading(false); // Make sure to set loading to false on error
-              return;
-            }
+            await fetchUserProfile(currentUser.id);
           }
         } catch (error) {
           console.error("Auth state change error:", error);
@@ -196,15 +174,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
-    const response = await supabase.auth.signUp({ email, password });
-    return {
-      data: response.data,
-      error: response.error,
-    };
+    try {
+      const response = await supabase.auth.signUp({ email, password });
+
+      // If signup is successful and we have a user, create an initial profile
+      if (response.data?.user?.id && !response.error) {
+        // Create an initial empty profile in the database
+        const { error: profileError } = await supabase
+          .from("user_profiles")
+          .upsert(
+            {
+              user_id: response.data.user.id,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id" },
+          );
+
+        if (profileError) {
+          console.error("Error creating initial user profile:", profileError);
+        } else {
+          console.log("Initial user profile created successfully");
+        }
+      }
+
+      return {
+        data: response.data,
+        error: response.error,
+      };
+    } catch (error) {
+      console.error("Unexpected error during sign up:", error);
+      return {
+        data: null,
+        error:
+          error instanceof Error
+            ? error
+            : new Error("An unexpected error occurred during sign up"),
+      };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error signing out:", error);
+        throw error;
+      }
+      console.log("User signed out successfully");
+      // Clear user state
+      setUser(null);
+      setUserProfile({});
+    } catch (error) {
+      console.error("Error during sign out:", error);
+      throw error;
+    }
   };
 
   const updateUserProfile = async (profile: UserProfile) => {
@@ -237,6 +261,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       console.log("User profile updated successfully");
+
+      // Fetch the updated profile to ensure consistency
+      await fetchUserProfile(user.id);
     } catch (error) {
       console.error("Error updating user profile:", error);
       throw error;
@@ -261,6 +288,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     updateUserProfile,
+    fetchUserProfile,
     hasCompletedSetup,
     isNewUser,
   };
@@ -269,10 +297,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 // Custom hook for accessing the auth context
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
+};
