@@ -47,71 +47,28 @@ const Home = () => {
 
   // Game state management based on user's race and kingdom
   const [gameState, setGameState] = useState(() => {
-    // Default values
+    // Default empty state structure
     const baseState = {
       resources: {
-        gold: 5000,
-        food: 3000,
-        materials: 2000,
-        researchPoints: 100,
+        gold: 0,
+        food: 0,
+        materials: 0,
+        researchPoints: 0,
       },
       production: {
-        goldRate: 250,
-        foodRate: 180,
-        materialsRate: 120,
-        researchRate: 15,
+        goldRate: 0,
+        foodRate: 0,
+        materialsRate: 0,
+        researchRate: 0,
       },
       military: {
-        infantry: 100,
-        archers: 50,
-        cavalry: 25,
-        specialUnits: 5,
+        infantry: 0,
+        archers: 0,
+        cavalry: 0,
+        specialUnits: 0,
       },
-      buildings: [
-        { id: 1, name: "Barracks", level: 2, underConstruction: false },
-        { id: 2, name: "Farm", level: 3, underConstruction: false },
-        { id: 3, name: "Mine", level: 2, underConstruction: false },
-        { id: 4, name: "Treasury", level: 1, underConstruction: true },
-      ],
+      buildings: [],
     };
-
-    // Apply race-specific bonuses
-    if (userProfile.race) {
-      switch (userProfile.race) {
-        case "ksatriya":
-          baseState.resources.gold = 6000;
-          baseState.production.goldRate = 300;
-          break;
-        case "wanamarta":
-          baseState.resources.researchPoints = 150;
-          baseState.production.researchRate = 20;
-          break;
-        case "wirabumi":
-          baseState.buildings.forEach((b) => (b.level += 1));
-          break;
-        case "jatayu":
-          // Speed bonus would affect timers, not represented in initial state
-          baseState.military.cavalry = 40;
-          break;
-        case "kurawa":
-          // Espionage bonus
-          baseState.resources.researchPoints = 130;
-          break;
-        case "tibrasara":
-          baseState.military.archers = 75;
-          break;
-        case "raksasa":
-          baseState.military.infantry = 150;
-          baseState.military.specialUnits = 8;
-          break;
-        case "dedemit":
-          baseState.resources.food = 2000; // Food penalty
-          baseState.military.specialUnits = 10; // But more special units
-          break;
-        default:
-          break;
-      }
-    }
 
     return baseState;
   });
@@ -195,33 +152,8 @@ const Home = () => {
     return () => clearInterval(gameUpdateInterval);
   }, []);
 
-  // Mock data for notifications - personalized based on user's kingdom
-  const notifications = [
-    {
-      id: 1,
-      type: "building",
-      message:
-        userProfile.race === "wirabumi"
-          ? "Fortress upgraded"
-          : "Barracks completed",
-      time: "2 minutes ago",
-    },
-    {
-      id: 2,
-      type: "combat",
-      message:
-        userProfile.race === "raksasa"
-          ? "Your warriors crushed the enemy"
-          : "Your army returned victorious",
-      time: "1 hour ago",
-    },
-    {
-      id: 3,
-      type: "alliance",
-      message: "New message from Dewan Raja",
-      time: "3 hours ago",
-    },
-  ];
+  // Notifications data
+  const [notifications, setNotifications] = useState([]);
 
   // Handle action selection
   const handleActionSelect = (action: string) => {
@@ -239,46 +171,8 @@ const Home = () => {
       navigate("/setup-kingdom");
     } else if (user && hasCompletedSetup()) {
       console.log("User profile loaded:", userProfile);
-      // Refresh game state when user profile changes
-      setGameState((prevState) => {
-        const updatedState = { ...prevState };
-
-        // Apply race-specific bonuses
-        if (userProfile.race) {
-          switch (userProfile.race) {
-            case "ksatriya":
-              updatedState.resources.gold = 6000;
-              updatedState.production.goldRate = 300;
-              break;
-            case "wanamarta":
-              updatedState.resources.researchPoints = 150;
-              updatedState.production.researchRate = 20;
-              break;
-            case "wirabumi":
-              updatedState.buildings.forEach((b) => (b.level += 1));
-              break;
-            case "jatayu":
-              updatedState.military.cavalry = 40;
-              break;
-            case "kurawa":
-              updatedState.resources.researchPoints = 130;
-              break;
-            case "tibrasara":
-              updatedState.military.archers = 75;
-              break;
-            case "raksasa":
-              updatedState.military.infantry = 150;
-              updatedState.military.specialUnits = 8;
-              break;
-            case "dedemit":
-              updatedState.resources.food = 2000;
-              updatedState.military.specialUnits = 10;
-              break;
-          }
-        }
-
-        return updatedState;
-      });
+      // Here we would fetch the game state from the server
+      // For now, we'll leave the state empty
     }
   }, [user, userProfile, hasCompletedSetup, navigate]);
 

@@ -6,6 +6,9 @@ type UserProfile = {
   kingdomName?: string;
   zodiac?: string;
   specialty?: string;
+  kingdomDescription?: string;
+  kingdomMotto?: string;
+  kingdomCapital?: string;
 };
 
 type AuthContextType = {
@@ -66,6 +69,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           kingdomName: profileData.kingdom_name,
           zodiac: profileData.zodiac,
           specialty: profileData.specialty,
+          kingdomDescription: profileData.kingdom_description,
+          kingdomMotto: profileData.kingdom_motto,
+          kingdomCapital: profileData.kingdom_capital,
         });
         console.log("AuthContext: User profile loaded", !!profileData);
         return true;
@@ -245,6 +251,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         kingdom_name: profile.kingdomName || userProfile.kingdomName,
         zodiac: profile.zodiac || userProfile.zodiac,
         specialty: profile.specialty || userProfile.specialty,
+        kingdom_description:
+          profile.kingdomDescription || userProfile.kingdomDescription,
+        kingdom_motto: profile.kingdomMotto || userProfile.kingdomMotto,
+        kingdom_capital: profile.kingdomCapital || userProfile.kingdomCapital,
         updated_at: new Date().toISOString(),
       };
 

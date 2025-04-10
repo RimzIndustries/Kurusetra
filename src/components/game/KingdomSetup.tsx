@@ -1384,6 +1384,9 @@ const KingdomSetup = ({
                                 kingdomName: kingdomName.trim(),
                                 zodiac: selectedZodiac,
                                 specialty: raceDetails.specialty,
+                                kingdomDescription: kingdomDescription.trim(),
+                                kingdomMotto: kingdomMotto.trim(),
+                                kingdomCapital: kingdomCapital.trim(),
                               });
 
                               // Log the data being saved for debugging
@@ -1392,6 +1395,9 @@ const KingdomSetup = ({
                                 kingdomName: kingdomName.trim(),
                                 zodiac: selectedZodiac,
                                 specialty: raceDetails.specialty,
+                                kingdomDescription: kingdomDescription.trim(),
+                                kingdomMotto: kingdomMotto.trim(),
+                                kingdomCapital: kingdomCapital.trim(),
                               });
 
                               console.log("Kingdom data saved successfully!");
