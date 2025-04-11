@@ -91,10 +91,10 @@ export default function Login() {
 
       // Short delay for success animation
       setTimeout(() => {
-        // Redirect new users to setup, existing users to dashboard
+        // Redirect new users to onboarding, existing users to dashboard
         if (isNewUser()) {
-          console.log("Redirecting new user to kingdom setup");
-          navigate("/setup-kingdom");
+          console.log("Redirecting new user to onboarding");
+          navigate("/onboarding");
         } else {
           console.log("Redirecting existing user to dashboard");
           navigate("/");

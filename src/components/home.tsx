@@ -72,7 +72,7 @@ const Home = () => {
   // Check if user has completed setup
   useEffect(() => {
     if (user && !hasCompletedSetup()) {
-      navigate("/setup-kingdom");
+      navigate("/onboarding");
     }
   }, [user, hasCompletedSetup, navigate]);
 

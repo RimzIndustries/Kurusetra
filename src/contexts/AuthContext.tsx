@@ -246,31 +246,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("Updating user profile with data:", profile);
 
-      // Update local state
+      // Update local state first for immediate UI feedback
       setUserProfile((prev) => ({ ...prev, ...profile }));
 
-      // Update in database
-      const { error } = await supabase.from("user_profiles").upsert(
-        {
-          user_id: user.id,
-          race: profile.race || userProfile.race,
-          kingdom_name: profile.kingdomName || userProfile.kingdomName,
-          kingdom_description:
-            profile.kingdomDescription || userProfile.kingdomDescription,
-          kingdom_motto: profile.kingdomMotto || userProfile.kingdomMotto,
-          kingdom_capital: profile.kingdomCapital || userProfile.kingdomCapital,
-          zodiac: profile.zodiac || userProfile.zodiac,
-          specialty: profile.specialty || userProfile.specialty,
-          updated_at: new Date().toISOString(),
-          setup_completed: true,
-        },
-        { onConflict: "user_id" },
-      );
+      // Prepare data for database update
+      const profileData = {
+        user_id: user.id,
+        race: profile.race || userProfile.race,
+        kingdom_name: profile.kingdomName || userProfile.kingdomName,
+        kingdom_description:
+          profile.kingdomDescription || userProfile.kingdomDescription,
+        kingdom_motto: profile.kingdomMotto || userProfile.kingdomMotto,
+        kingdom_capital: profile.kingdomCapital || userProfile.kingdomCapital,
+        zodiac: profile.zodiac || userProfile.zodiac,
+        specialty: profile.specialty || userProfile.specialty,
+        updated_at: new Date().toISOString(),
+        setup_completed:
+          profile.setupCompleted !== undefined ? profile.setupCompleted : true,
+      };
 
-      if (error) throw error;
+      console.log("Saving profile data to Supabase:", profileData);
 
-      console.log("User profile updated successfully");
-      return { success: true };
+      // Update in database using upsert to handle both insert and update cases
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .upsert(profileData, { onConflict: "user_id" });
+
+      if (error) {
+        console.error("Supabase error while updating profile:", error);
+        throw error;
+      }
+
+      console.log("User profile updated successfully in Supabase", data);
+      return { success: true, data };
     } catch (error) {
       console.error("Error updating user profile:", error);
       throw error;
@@ -329,14 +337,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Export the hook as a named function declaration with displayName
-export function useAuth() {
+// Export the hook as a named export for Fast Refresh compatibility
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
-
-// Add displayName property to help with Fast Refresh
-useAuth.displayName = "useAuth";
+};
