@@ -31,6 +31,7 @@ type AuthContextType = {
   updateUserProfile: (profile: UserProfile) => Promise<void>;
   hasCompletedSetup: () => boolean;
   isNewUser: () => boolean;
+  checkSupabaseConnection: () => Promise<boolean>;
 };
 
 const supabase = createClient(
@@ -197,6 +198,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     const response = await supabase.auth.signUp({ email, password });
+
+    // If signup was successful and we have a user, create a default profile
+    if (response.data?.user && !response.error) {
+      try {
+        const userId = response.data.user.id;
+
+        // Create default user profile
+        const { error: profileError } = await supabase
+          .from("user_profiles")
+          .insert({
+            user_id: userId,
+            race: null,
+            kingdom_name: null,
+            zodiac: null,
+            specialty: null,
+            updated_at: new Date().toISOString(),
+          });
+
+        if (profileError) {
+          console.error("Error creating default user profile:", profileError);
+        } else {
+          console.log("Default user profile created successfully");
+        }
+      } catch (error) {
+        console.error("Unexpected error creating user profile:", error);
+      }
+    }
+
     return {
       data: response.data,
       error: response.error,
@@ -242,6 +271,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return !hasCompletedSetup();
   };
 
+  const checkSupabaseConnection = async (): Promise<boolean> => {
+    try {
+      console.log("Testing Supabase connection...");
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("count(*)")
+        .limit(1);
+
+      if (error) {
+        console.error("Supabase connection test failed:", error);
+        return false;
+      }
+
+      console.log("Supabase connection test successful:", data);
+      return true;
+    } catch (error) {
+      console.error("Unexpected error during Supabase connection test:", error);
+      return false;
+    }
+  };
+
   const value = {
     user,
     userProfile,
@@ -253,6 +303,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     updateUserProfile,
     hasCompletedSetup,
     isNewUser,
+    checkSupabaseConnection,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

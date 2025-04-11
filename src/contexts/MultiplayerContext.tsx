@@ -337,4 +337,3 @@ export function useMultiplayer() {
   }
   return context;
 }
-// This ensures the hook is properly recognized by Fast Refresh
