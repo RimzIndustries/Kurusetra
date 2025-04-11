@@ -163,6 +163,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("AuthContext: Sign in error", response.error);
       } else {
         console.log("AuthContext: Sign in successful");
+
+        // Update last login time in user_registrations table
+        if (response.data?.user?.id) {
+          const { error: updateError } = await supabase
+            .from("user_registrations")
+            .update({
+              last_login: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", response.data.user.id);
+
+          if (updateError) {
+            console.error("Error updating last login time:", updateError);
+          }
+        }
       }
 
       return {
@@ -203,6 +218,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error("Error creating initial user profile:", profileError);
         } else {
           console.log("Initial user profile created successfully");
+        }
+
+        // Also store registration data in the user_registrations table
+        const { error: registrationError } = await supabase
+          .from("user_registrations")
+          .upsert(
+            {
+              user_id: response.data.user.id,
+              email: email,
+              registered_at: new Date().toISOString(),
+              last_login: new Date().toISOString(),
+              registration_source: "web",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id" },
+          );
+
+        if (registrationError) {
+          console.error(
+            "Error storing user registration data:",
+            registrationError,
+          );
+        } else {
+          console.log("User registration data stored successfully");
         }
       }
 
