@@ -329,8 +329,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Define the hook as a named function declaration for Fast Refresh compatibility
-function useAuthHook() {
+// Export the hook as a named function declaration with displayName
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
@@ -338,5 +338,5 @@ function useAuthHook() {
   return context;
 }
 
-// Export the hook as a named export
-export const useAuth = useAuthHook;
+// Add displayName property to help with Fast Refresh
+useAuth.displayName = "useAuth";

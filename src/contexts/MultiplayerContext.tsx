@@ -329,8 +329,8 @@ export function MultiplayerProvider({
   );
 }
 
-// Define the hook as a named function declaration for Fast Refresh compatibility
-function useMultiplayerHook() {
+// Export the hook as a named function declaration with displayName
+export function useMultiplayer() {
   const context = useContext(MultiplayerContext);
   if (context === undefined) {
     throw new Error("useMultiplayer must be used within a MultiplayerProvider");
@@ -338,5 +338,5 @@ function useMultiplayerHook() {
   return context;
 }
 
-// Export the hook as a named export
-export const useMultiplayer = useMultiplayerHook;
+// Add displayName property to help with Fast Refresh
+useMultiplayer.displayName = "useMultiplayer";
