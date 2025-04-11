@@ -60,8 +60,9 @@ export default function ProtectedRoute({
     return <Navigate to={redirectPath} replace />;
   }
 
-  // Redirect to kingdom setup if user hasn't completed setup
-  // Skip this check if already on the setup page to avoid redirect loops
+  // Only redirect to kingdom setup if user hasn't completed setup
+  // and they're not already on the setup page
+  // This prevents redirecting users who have already completed setup
   if (!hasCompletedSetup() && location.pathname !== "/setup-kingdom") {
     console.log("ProtectedRoute: Setup not completed, redirecting to setup");
     return <Navigate to="/setup-kingdom" replace state={{ from: location }} />;

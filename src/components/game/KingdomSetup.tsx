@@ -1388,9 +1388,9 @@ const KingdomSetup = ({
                               // Navigate after showing success animation
                               setTimeout(() => {
                                 console.log(
-                                  "Redirecting to home after successful setup",
+                                  "Redirecting to dashboard after successful setup",
                                 );
-                                navigate("/");
+                                navigate("/dashboard");
                               }, 500);
                             } catch (err: any) {
                               console.error(
