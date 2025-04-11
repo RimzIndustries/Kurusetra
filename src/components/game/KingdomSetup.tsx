@@ -63,6 +63,10 @@ const KingdomSetup = ({
   selectedRace: propSelectedRace,
 }: KingdomSetupProps) => {
   const location = useLocation();
+  // Get auth context values first before using them in other hooks
+  const { updateUserProfile, userProfile, user, supabase } = useAuth();
+  const navigate = useNavigate();
+
   // Get race from URL query parameters if not provided as prop
   const [selectedRace, setSelectedRace] = useState<string | undefined>(
     propSelectedRace,
@@ -170,7 +174,108 @@ const KingdomSetup = ({
     }
   }, [propSelectedRace]);
 
+  // Store setup start time for tracking setup duration
   useEffect(() => {
+    if (!localStorage.getItem("setupStartTime")) {
+      localStorage.setItem("setupStartTime", Date.now().toString());
+      console.log("Setup start time recorded:", Date.now());
+    }
+
+    // Check if user has already completed setup
+    const checkProfileSetup = async () => {
+      if (user?.id) {
+        try {
+          console.log(
+            "Checking profile setup for user:",
+            user.email,
+            "with ID:",
+            user.id,
+          );
+
+          const { data: profileData, error } = await supabase
+            .from("user_profiles")
+            .select(
+              "race, kingdom_name, zodiac, specialty, kingdom_description, kingdom_motto, kingdom_capital, last_kingdom_visit, last_building_visit, last_resources_visit, last_military_visit, last_alliance_visit, last_combat_visit, last_map_visit, last_profile_visit",
+            )
+            .eq("user_id", user.id)
+            .single();
+
+          if (error) {
+            console.error("Error fetching profile data:", error);
+
+            // Check if the error is because the profile doesn't exist
+            if (error.code === "PGRST116") {
+              console.log("Profile doesn't exist yet for user:", user.email);
+
+              // Create an empty profile if it doesn't exist
+              const timestamp = new Date().toISOString();
+              const { error: createError } = await supabase
+                .from("user_profiles")
+                .insert({
+                  user_id: user.id,
+                  created_at: timestamp,
+                  updated_at: timestamp,
+                });
+
+              if (createError) {
+                console.error("Error creating empty profile:", createError);
+              } else {
+                console.log("Created empty profile for user:", user.email);
+              }
+            }
+          } else if (profileData?.race && profileData?.kingdom_name) {
+            console.log(
+              "User has already completed kingdom setup, redirecting to dashboard",
+            );
+            console.log("Existing profile data:", profileData);
+
+            // Check for profile completeness
+            const isProfileComplete =
+              !!profileData.race &&
+              !!profileData.kingdom_name &&
+              (!!profileData.zodiac || !!profileData.specialty);
+
+            if (isProfileComplete) {
+              localStorage.setItem("setupCompleted", "true");
+              navigate("/dashboard", { replace: true });
+              return;
+            } else {
+              console.log("Profile exists but is incomplete, continuing setup");
+            }
+          } else {
+            console.log(
+              "Profile exists but kingdom setup is incomplete:",
+              profileData,
+            );
+          }
+
+          // Also check user_registrations table for consistency
+          const { data: regData, error: regError } = await supabase
+            .from("user_registrations")
+            .select("email, registered_at, last_login")
+            .eq("user_id", user.id)
+            .single();
+
+          if (regError) {
+            console.error("Error fetching registration data:", regError);
+          } else {
+            console.log(
+              "Registration data for user:",
+              regData?.email,
+              "registered at:",
+              regData?.registered_at,
+            );
+          }
+        } catch (error) {
+          console.error("Error checking profile setup:", error);
+        }
+      } else {
+        console.log("No user ID available to check profile setup");
+      }
+    };
+
+    checkProfileSetup();
+
     // If race is not provided as prop, try to get it from URL query parameters
     if (!selectedRace) {
       const params = new URLSearchParams(location.search);
@@ -185,7 +290,7 @@ const KingdomSetup = ({
     } else {
       console.log("Race already set from props or state:", selectedRace);
     }
-  }, [location.search, selectedRace]);
+  }, [location.search, selectedRace, user?.id, navigate, supabase]);
 
   const [kingdomName, setKingdomName] = useState("");
   const [kingdomDescription, setKingdomDescription] = useState("");
@@ -196,8 +301,6 @@ const KingdomSetup = ({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
-  const { updateUserProfile, userProfile } = useAuth();
-  const navigate = useNavigate();
 
   // Get race details based on selected race ID
   const getRaceDetails = (raceId?: string) => {
@@ -1378,29 +1481,432 @@ const KingdomSetup = ({
                           console.log("Showing success animation...");
                           setTimeout(async () => {
                             try {
-                              // Save all kingdom data to user profile
-                              await updateUserProfile({
+                              // Save all kingdom data to user profile with complete information
+                              const timestamp = new Date().toISOString();
+
+                              // Store user email in localStorage for reference during profile creation
+                              if (user?.email) {
+                                localStorage.setItem("userEmail", user.email);
+                                console.log(
+                                  "User email stored in localStorage:",
+                                  user.email,
+                                );
+                              }
+
+                              // Enhanced data validation before saving
+                              if (!selectedRace) {
+                                throw new Error("Race selection is required");
+                              }
+
+                              if (!kingdomName.trim()) {
+                                throw new Error("Kingdom name is required");
+                              }
+
+                              const profileData = {
+                                // Core kingdom identity
                                 race: selectedRace,
                                 kingdomName: kingdomName.trim(),
-                                zodiac: selectedZodiac,
+                                zodiac: selectedZodiac || "aries", // Default zodiac if not selected
                                 specialty: raceDetails.specialty,
-                                kingdomDescription: kingdomDescription.trim(),
-                                kingdomMotto: kingdomMotto.trim(),
-                                kingdomCapital: kingdomCapital.trim(),
-                              });
+
+                                // Kingdom details with improved defaults
+                                kingdomDescription: kingdomDescription.trim()
+                                  ? kingdomDescription.trim()
+                                  : `A prosperous ${raceDetails.name} kingdom with great potential. Known for their ${raceDetails.specialty} abilities.`,
+
+                                kingdomMotto: kingdomMotto.trim()
+                                  ? kingdomMotto.trim()
+                                  : `Glory and honor to ${kingdomName.trim()}, may we rise to greatness!`,
+
+                                kingdomCapital: kingdomCapital.trim()
+                                  ? kingdomCapital.trim()
+                                  : `${kingdomName.trim()} Capital`,
+
+                                // Navigation timestamps - all initialized to the same value
+                                lastKingdomVisit: timestamp,
+                                lastBuildingVisit: timestamp,
+                                lastResourcesVisit: timestamp,
+                                lastMilitaryVisit: timestamp,
+                                lastAllianceVisit: timestamp,
+                                lastCombatVisit: timestamp,
+                                lastMapVisit: timestamp,
+                                lastProfileVisit: timestamp,
+                              };
+
+                              // Log the email associated with this profile
+                              console.log(
+                                "Saving kingdom data for user email:",
+                                user?.email,
+                                "with user ID:",
+                                user?.id,
+                              );
+
+                              // Verify data integrity before saving
+                              const dataIntegrityCheck = {
+                                hasRace: !!profileData.race,
+                                hasKingdomName: !!profileData.kingdomName,
+                                hasZodiac: !!profileData.zodiac,
+                                hasSpecialty: !!profileData.specialty,
+                                hasDescription:
+                                  !!profileData.kingdomDescription,
+                                hasMotto: !!profileData.kingdomMotto,
+                                hasCapital: !!profileData.kingdomCapital,
+                                hasAllTimestamps: !!(
+                                  profileData.lastKingdomVisit &&
+                                  profileData.lastBuildingVisit &&
+                                  profileData.lastResourcesVisit &&
+                                  profileData.lastMilitaryVisit &&
+                                  profileData.lastAllianceVisit &&
+                                  profileData.lastCombatVisit &&
+                                  profileData.lastMapVisit &&
+                                  profileData.lastProfileVisit
+                                ),
+                              };
+
+                              console.log(
+                                "Data integrity check before saving:",
+                                dataIntegrityCheck,
+                              );
+
+                              if (
+                                !dataIntegrityCheck.hasRace ||
+                                !dataIntegrityCheck.hasKingdomName
+                              ) {
+                                throw new Error(
+                                  "Critical kingdom data missing before save",
+                                );
+                              }
+
+                              // Update user profile in database
+                              await updateUserProfile(profileData);
+
+                              // Enhanced verification: Verify the data was saved correctly by fetching it back
+                              if (user?.id) {
+                                try {
+                                  const {
+                                    data: verifyData,
+                                    error: verifyError,
+                                  } = await supabase
+                                    .from("user_profiles")
+                                    .select("*")
+                                    .eq("user_id", user.id)
+                                    .single();
+
+                                  if (verifyError) {
+                                    console.error(
+                                      "Error verifying saved profile data:",
+                                      verifyError,
+                                    );
+                                    throw new Error(
+                                      "Failed to verify profile data was saved correctly",
+                                    );
+                                  } else {
+                                    // Comprehensive verification of all critical fields
+                                    const verificationResults = {
+                                      raceMatches:
+                                        verifyData.race === selectedRace,
+                                      kingdomNameMatches:
+                                        verifyData.kingdom_name ===
+                                        kingdomName.trim(),
+                                      zodiacMatches:
+                                        verifyData.zodiac ===
+                                        (selectedZodiac || "aries"),
+                                      specialtyMatches:
+                                        verifyData.specialty ===
+                                        raceDetails.specialty,
+                                      hasTimestamps:
+                                        !!verifyData.last_kingdom_visit,
+                                    };
+
+                                    console.log(
+                                      "Verification results:",
+                                      verificationResults,
+                                    );
+
+                                    // If any critical field doesn't match, throw an error
+                                    if (
+                                      !verificationResults.raceMatches ||
+                                      !verificationResults.kingdomNameMatches
+                                    ) {
+                                      throw new Error(
+                                        "Critical profile data was not saved correctly",
+                                      );
+                                    }
+
+                                    console.log(
+                                      "Verified saved profile data:",
+                                      {
+                                        race: verifyData.race,
+                                        kingdom_name: verifyData.kingdom_name,
+                                        zodiac: verifyData.zodiac,
+                                        specialty: verifyData.specialty,
+                                        // Include other fields as needed
+                                      },
+                                    );
+                                  }
+                                } catch (verifyErr) {
+                                  console.error(
+                                    "Exception during verification:",
+                                    verifyErr,
+                                  );
+                                  throw verifyErr; // Re-throw to handle in the outer catch block
+                                }
+                              } else {
+                                throw new Error(
+                                  "User ID is missing, cannot verify profile data",
+                                );
+                              }
 
                               // Log the data being saved for debugging
-                              console.log("Kingdom setup data saved:", {
-                                race: selectedRace,
-                                kingdomName: kingdomName.trim(),
-                                zodiac: selectedZodiac,
-                                specialty: raceDetails.specialty,
-                                kingdomDescription: kingdomDescription.trim(),
-                                kingdomMotto: kingdomMotto.trim(),
-                                kingdomCapital: kingdomCapital.trim(),
+                              console.log(
+                                "Complete kingdom setup data saved to database for user:",
+                                user?.email,
+                                "\nProfile data:",
+                                profileData,
+                              );
+
+                              // Also update the user_registrations table to ensure data consistency
+                              if (user?.id) {
+                                try {
+                                  // Prepare comprehensive update data for user_registrations
+                                  const registrationUpdateData = {
+                                    // Setup completion tracking
+                                    updated_at: timestamp,
+                                    setup_completed: true,
+                                    setup_completed_at: timestamp,
+
+                                    // Navigation timestamps
+                                    last_kingdom_visit: timestamp,
+                                    last_building_visit: timestamp,
+                                    last_resources_visit: timestamp,
+                                    last_military_visit: timestamp,
+                                    last_alliance_visit: timestamp,
+                                    last_combat_visit: timestamp,
+                                    last_map_visit: timestamp,
+                                    last_profile_visit: timestamp,
+
+                                    // Kingdom data for consistency
+                                    race: selectedRace,
+                                    kingdom_name: kingdomName.trim(),
+                                    zodiac: selectedZodiac || "aries",
+                                    specialty: raceDetails.specialty,
+                                    kingdom_description:
+                                      kingdomDescription.trim() ||
+                                      `A prosperous ${raceDetails.name} kingdom with great potential.`,
+                                    kingdom_motto:
+                                      kingdomMotto.trim() ||
+                                      `Glory and honor to ${kingdomName.trim()}, may we rise to greatness!`,
+                                    kingdom_capital:
+                                      kingdomCapital.trim() ||
+                                      `${kingdomName.trim()} Capital`,
+                                  };
+
+                                  console.log(
+                                    "Updating user_registrations with complete kingdom data:",
+                                    registrationUpdateData,
+                                  );
+
+                                  const { error: regUpdateError } =
+                                    await supabase
+                                      .from("user_registrations")
+                                      .update(registrationUpdateData)
+                                      .eq("user_id", user.id);
+
+                                  if (regUpdateError) {
+                                    console.error(
+                                      "Error updating user_registrations:",
+                                      regUpdateError,
+                                    );
+                                    throw new Error(
+                                      `Failed to update user_registrations: ${regUpdateError.message}`,
+                                    );
+                                  } else {
+                                    console.log(
+                                      "Successfully updated user_registrations table with complete kingdom data",
+                                    );
+                                  }
+
+                                  // Verify user_registrations update
+                                  const {
+                                    data: verifyRegData,
+                                    error: verifyRegError,
+                                  } = await supabase
+                                    .from("user_registrations")
+                                    .select(
+                                      "setup_completed, kingdom_name, race, zodiac",
+                                    )
+                                    .eq("user_id", user.id)
+                                    .single();
+
+                                  if (verifyRegError) {
+                                    console.error(
+                                      "Error verifying user_registrations update:",
+                                      verifyRegError,
+                                    );
+                                  } else if (verifyRegData) {
+                                    console.log(
+                                      "Verified user_registrations update:",
+                                      {
+                                        setupCompleted:
+                                          verifyRegData.setup_completed,
+                                        kingdomName: verifyRegData.kingdom_name,
+                                        race: verifyRegData.race,
+                                      },
+                                    );
+
+                                    if (
+                                      !verifyRegData.setup_completed ||
+                                      verifyRegData.kingdom_name !==
+                                        kingdomName.trim() ||
+                                      verifyRegData.race !== selectedRace
+                                    ) {
+                                      console.warn(
+                                        "Data inconsistency detected in user_registrations update",
+                                      );
+                                    }
+                                  }
+                                } catch (regErr) {
+                                  console.error(
+                                    "Exception updating user_registrations:",
+                                    regErr,
+                                  );
+                                }
+                              }
+
+                              // Log specific profile completeness metrics for debugging
+                              console.log("Profile completeness check:", {
+                                hasRace: !!profileData.race,
+                                hasKingdomName: !!profileData.kingdomName,
+                                hasZodiac: !!profileData.zodiac,
+                                hasSpecialty: !!profileData.specialty,
+                                descriptionLength:
+                                  profileData.kingdomDescription?.length || 0,
+                                mottoLength:
+                                  profileData.kingdomMotto?.length || 0,
+                                capitalLength:
+                                  profileData.kingdomCapital?.length || 0,
+                                hasAllTimestamps: !!(
+                                  profileData.lastKingdomVisit &&
+                                  profileData.lastBuildingVisit &&
+                                  profileData.lastResourcesVisit &&
+                                  profileData.lastMilitaryVisit &&
+                                  profileData.lastAllianceVisit &&
+                                  profileData.lastCombatVisit &&
+                                  profileData.lastMapVisit &&
+                                  profileData.lastProfileVisit
+                                ),
+                                userEmail: user?.email,
+                                userId: user?.id,
                               });
 
-                              console.log("Kingdom data saved successfully!");
+                              console.log(
+                                "Kingdom data saved successfully to database for user:",
+                                user?.email,
+                                "with ID:",
+                                user?.id,
+                                "User profile is now complete.",
+                              );
+
+                              // Track this setup completion event with comprehensive data
+                              try {
+                                // Prepare detailed event data for analytics and tracking
+                                const eventData = {
+                                  // Core kingdom identity
+                                  race: selectedRace,
+                                  kingdom_name: kingdomName.trim(),
+                                  zodiac: selectedZodiac || "aries",
+                                  specialty: raceDetails.specialty,
+                                  email: user?.email,
+
+                                  // Additional kingdom details
+                                  kingdom_description:
+                                    kingdomDescription.trim() || null,
+                                  kingdom_motto: kingdomMotto.trim() || null,
+                                  kingdom_capital:
+                                    kingdomCapital.trim() || null,
+
+                                  // Setup metadata
+                                  setup_timestamp: timestamp,
+                                  setup_duration_ms:
+                                    Date.now() -
+                                    (localStorage.getItem("setupStartTime")
+                                      ? parseInt(
+                                          localStorage.getItem(
+                                            "setupStartTime",
+                                          ) || "0",
+                                        )
+                                      : Date.now()),
+                                  browser_info: navigator.userAgent,
+                                  screen_size: `${window.innerWidth}x${window.innerHeight}`,
+
+                                  // Data completeness metrics
+                                  provided_description:
+                                    !!kingdomDescription.trim(),
+                                  provided_motto: !!kingdomMotto.trim(),
+                                  provided_capital: !!kingdomCapital.trim(),
+                                  provided_zodiac: !!selectedZodiac,
+                                };
+
+                                console.log(
+                                  "Tracking kingdom setup completion event with data:",
+                                  eventData,
+                                );
+
+                                const { data: eventData, error: eventError } =
+                                  await supabase
+                                    .from("user_events")
+                                    .insert({
+                                      user_id: user?.id,
+                                      event_type: "kingdom_setup_completed",
+                                      event_data: eventData,
+                                      created_at: timestamp,
+                                    })
+                                    .select();
+
+                                if (eventError) {
+                                  console.error(
+                                    "Error tracking setup completion event:",
+                                    eventError,
+                                  );
+                                } else {
+                                  console.log(
+                                    "Successfully tracked setup completion event with ID:",
+                                    eventData?.[0]?.id,
+                                    "\nEvent data:",
+                                    eventData,
+                                  );
+
+                                  // Also track a separate onboarding_completed event
+                                  const { error: onboardingEventError } =
+                                    await supabase.from("user_events").insert({
+                                      user_id: user?.id,
+                                      event_type: "onboarding_completed",
+                                      event_data: {
+                                        race: selectedRace,
+                                        kingdom_name: kingdomName.trim(),
+                                        email: user?.email,
+                                        completion_time: timestamp,
+                                      },
+                                      created_at: timestamp,
+                                    });
+
+                                  if (onboardingEventError) {
+                                    console.error(
+                                      "Error tracking onboarding completion:",
+                                      onboardingEventError,
+                                    );
+                                  } else {
+                                    console.log(
+                                      "Successfully tracked onboarding completion event",
+                                    );
+                                  }
+                                }
+                              } catch (eventErr) {
+                                console.error(
+                                  "Exception tracking setup event:",
+                                  eventErr,
+                                );
+                              }
 
                               // Navigate to dashboard after showing success animation (1.5 second delay)
                               // Using /dashboard instead of / to ensure proper routing
@@ -1409,10 +1915,11 @@ const KingdomSetup = ({
                                 // Clear the redirect flag from localStorage
                                 localStorage.removeItem("redirectedToSetup");
                                 // Set a completed flag to prevent future redirects
-                                localStorage.setItem(
-                                  "kingdomSetupCompleted",
-                                  "true",
+                                localStorage.setItem("setupCompleted", "true");
+                                console.log(
+                                  "Setup completed flag set in localStorage",
                                 );
+                                // Navigate to dashboard with replace to prevent back navigation to setup
                                 navigate("/dashboard", { replace: true });
                               }, 1500);
                             } catch (err: any) {

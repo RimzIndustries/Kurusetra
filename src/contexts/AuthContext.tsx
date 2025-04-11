@@ -9,6 +9,14 @@ type UserProfile = {
   kingdomDescription?: string;
   kingdomMotto?: string;
   kingdomCapital?: string;
+  lastKingdomVisit?: string;
+  lastBuildingVisit?: string;
+  lastResourcesVisit?: string;
+  lastMilitaryVisit?: string;
+  lastAllianceVisit?: string;
+  lastCombatVisit?: string;
+  lastMapVisit?: string;
+  lastProfileVisit?: string;
 };
 
 type AuthContextType = {
@@ -35,6 +43,8 @@ type AuthContextType = {
   fetchUserProfile: (userId: string) => Promise<boolean>;
   hasCompletedSetup: () => boolean;
   isNewUser: () => boolean;
+  updateNavigationTimestamp: (page: string) => Promise<void>;
+  getNavigationStats: () => Promise<Record<string, any> | null>;
 };
 
 const supabase = createClient(
@@ -55,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: profileData, error: profileError } = await supabase
         .from("user_profiles")
         .select(
-          "race, kingdom_name, zodiac, specialty, kingdom_description, kingdom_motto, kingdom_capital",
+          "race, kingdom_name, zodiac, specialty, kingdom_description, kingdom_motto, kingdom_capital, last_kingdom_visit, last_building_visit, last_resources_visit, last_military_visit, last_alliance_visit, last_combat_visit, last_map_visit, last_profile_visit",
         )
         .eq("user_id", userId)
         .single();
@@ -74,6 +84,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           kingdomDescription: profileData.kingdom_description,
           kingdomMotto: profileData.kingdom_motto,
           kingdomCapital: profileData.kingdom_capital,
+          lastKingdomVisit: profileData.last_kingdom_visit,
+          lastBuildingVisit: profileData.last_building_visit,
+          lastResourcesVisit: profileData.last_resources_visit,
+          lastMilitaryVisit: profileData.last_military_visit,
+          lastAllianceVisit: profileData.last_alliance_visit,
+          lastCombatVisit: profileData.last_combat_visit,
+          lastMapVisit: profileData.last_map_visit,
+          lastProfileVisit: profileData.last_profile_visit,
         });
         console.log("AuthContext: User profile loaded", !!profileData);
         return true;
@@ -164,13 +182,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         console.log("AuthContext: Sign in successful");
 
-        // Update last login time in user_registrations table
+        // Update last login time and reset navigation timestamps in user_registrations table
         if (response.data?.user?.id) {
+          const timestamp = new Date().toISOString();
           const { error: updateError } = await supabase
             .from("user_registrations")
             .update({
-              last_login: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
+              last_login: timestamp,
+              updated_at: timestamp,
+              // Reset all navigation timestamps to current time on login
+              last_kingdom_visit: timestamp,
+              last_building_visit: timestamp,
+              last_resources_visit: timestamp,
+              last_military_visit: timestamp,
+              last_alliance_visit: timestamp,
+              last_combat_visit: timestamp,
+              last_map_visit: timestamp,
+              last_profile_visit: timestamp,
             })
             .eq("user_id", response.data.user.id);
 
@@ -202,14 +230,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // If signup is successful and we have a user, create an initial profile
       if (response.data?.user?.id && !response.error) {
+        const timestamp = new Date().toISOString();
+
         // Create an initial empty profile in the database
         const { error: profileError } = await supabase
           .from("user_profiles")
           .upsert(
             {
               user_id: response.data.user.id,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
+              created_at: timestamp,
+              updated_at: timestamp,
             },
             { onConflict: "user_id" },
           );
@@ -218,6 +248,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error("Error creating initial user profile:", profileError);
         } else {
           console.log("Initial user profile created successfully");
+
+          // Fetch the newly created profile to update local state
+          await fetchUserProfile(response.data.user.id);
         }
 
         // Also store registration data in the user_registrations table
@@ -227,11 +260,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             {
               user_id: response.data.user.id,
               email: email,
-              registered_at: new Date().toISOString(),
-              last_login: new Date().toISOString(),
+              registered_at: timestamp,
+              last_login: timestamp,
               registration_source: "web",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
+              created_at: timestamp,
+              updated_at: timestamp,
+              // Initialize navigation timestamps
+              last_kingdom_visit: timestamp,
+              last_building_visit: timestamp,
+              last_resources_visit: timestamp,
+              last_military_visit: timestamp,
+              last_alliance_visit: timestamp,
+              last_combat_visit: timestamp,
+              last_map_visit: timestamp,
+              last_profile_visit: timestamp,
+              // Initialize navigation counts
+              navigation_count_kingdom: 0,
+              navigation_count_building: 0,
+              navigation_count_resources: 0,
+              navigation_count_military: 0,
+              navigation_count_alliance: 0,
+              navigation_count_combat: 0,
+              navigation_count_map: 0,
+              navigation_count_profile: 0,
             },
             { onConflict: "user_id" },
           );
@@ -264,15 +315,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      console.log("AuthContext: Attempting to sign out");
+      // Clear user state first for immediate UI response
+      setUser(null);
+      setUserProfile({});
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Error signing out:", error);
         throw error;
       }
       console.log("User signed out successfully");
-      // Clear user state
-      setUser(null);
-      setUserProfile({});
     } catch (error) {
       console.error("Error during sign out:", error);
       throw error;
@@ -297,6 +350,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           profile.kingdomDescription || userProfile.kingdomDescription,
         kingdom_motto: profile.kingdomMotto || userProfile.kingdomMotto,
         kingdom_capital: profile.kingdomCapital || userProfile.kingdomCapital,
+        last_kingdom_visit:
+          profile.lastKingdomVisit || userProfile.lastKingdomVisit,
+        last_building_visit:
+          profile.lastBuildingVisit || userProfile.lastBuildingVisit,
+        last_resources_visit:
+          profile.lastResourcesVisit || userProfile.lastResourcesVisit,
+        last_military_visit:
+          profile.lastMilitaryVisit || userProfile.lastMilitaryVisit,
+        last_alliance_visit:
+          profile.lastAllianceVisit || userProfile.lastAllianceVisit,
+        last_combat_visit:
+          profile.lastCombatVisit || userProfile.lastCombatVisit,
+        last_map_visit: profile.lastMapVisit || userProfile.lastMapVisit,
+        last_profile_visit:
+          profile.lastProfileVisit || userProfile.lastProfileVisit,
         updated_at: new Date().toISOString(),
       };
 
@@ -324,11 +392,138 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const hasCompletedSetup = () => {
     console.log("Checking if setup completed:", userProfile);
-    return !!(userProfile?.race && userProfile?.kingdomName);
+    // Check localStorage first for faster response
+    if (localStorage.getItem("setupCompleted") === "true") {
+      return true;
+    }
+    // Then check actual profile data more thoroughly
+    const isCompleted = !!(userProfile?.race && userProfile?.kingdomName);
+    // If completed, store in localStorage for future checks
+    if (isCompleted) {
+      localStorage.setItem("setupCompleted", "true");
+      console.log("Setup completed, setting localStorage flag");
+    }
+    return isCompleted;
   };
 
   const isNewUser = () => {
     return !hasCompletedSetup();
+  };
+
+  // Function to update navigation timestamps in user_registrations table
+  const updateNavigationTimestamp = async (page: string) => {
+    if (!user) return;
+
+    try {
+      const timestamp = new Date().toISOString();
+      const updateData: Record<string, any> = {
+        updated_at: timestamp,
+      };
+
+      let countField = "";
+
+      // Map route path to database column
+      switch (page) {
+        case "/kingdom":
+          updateData.last_kingdom_visit = timestamp;
+          countField = "navigation_count_kingdom";
+          break;
+        case "/building":
+          updateData.last_building_visit = timestamp;
+          countField = "navigation_count_building";
+          break;
+        case "/resources":
+          updateData.last_resources_visit = timestamp;
+          countField = "navigation_count_resources";
+          break;
+        case "/military":
+          updateData.last_military_visit = timestamp;
+          countField = "navigation_count_military";
+          break;
+        case "/alliance":
+          updateData.last_alliance_visit = timestamp;
+          countField = "navigation_count_alliance";
+          break;
+        case "/combat":
+          updateData.last_combat_visit = timestamp;
+          countField = "navigation_count_combat";
+          break;
+        case "/map":
+          updateData.last_map_visit = timestamp;
+          countField = "navigation_count_map";
+          break;
+        case "/profile":
+          updateData.last_profile_visit = timestamp;
+          countField = "navigation_count_profile";
+          break;
+        default:
+          // For other pages, just update the last_login
+          updateData.last_login = timestamp;
+          break;
+      }
+
+      // If we have a count field to update, increment it
+      if (countField) {
+        // First get the current count
+        const { data: currentData, error: fetchError } = await supabase
+          .from("user_registrations")
+          .select(countField)
+          .eq("user_id", user.id)
+          .single();
+
+        if (fetchError) {
+          console.error("Error fetching current navigation count:", fetchError);
+        } else if (currentData) {
+          // Increment the count
+          updateData[countField] = (currentData[countField] || 0) + 1;
+        }
+      }
+
+      console.log(`Updating navigation timestamp for ${page}:`, updateData);
+
+      const { error } = await supabase
+        .from("user_registrations")
+        .update(updateData)
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error updating navigation timestamp:", error);
+      }
+    } catch (error) {
+      console.error("Error in updateNavigationTimestamp:", error);
+    }
+  };
+
+  // Function to get navigation statistics for the current user
+  const getNavigationStats = async () => {
+    if (!user) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from("user_registrations")
+        .select(
+          `
+          last_kingdom_visit, last_building_visit, last_resources_visit, 
+          last_military_visit, last_alliance_visit, last_combat_visit, 
+          last_map_visit, last_profile_visit, last_login,
+          navigation_count_kingdom, navigation_count_building, navigation_count_resources,
+          navigation_count_military, navigation_count_alliance, navigation_count_combat,
+          navigation_count_map, navigation_count_profile
+          `,
+        )
+        .eq("user_id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching navigation stats:", error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error in getNavigationStats:", error);
+      return null;
+    }
   };
 
   const value = {
@@ -343,16 +538,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetchUserProfile,
     hasCompletedSetup,
     isNewUser,
+    updateNavigationTimestamp,
+    getNavigationStats,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 // Custom hook for accessing the auth context
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-};
+}

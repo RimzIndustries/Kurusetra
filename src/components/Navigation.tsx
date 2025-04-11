@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Home,
@@ -17,19 +17,38 @@ const Navigation = () => {
   console.log("Navigation component rendered");
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut, user } = useAuth();
+  const { signOut, user, updateNavigationTimestamp, userProfile } = useAuth();
+
+  // Update navigation timestamp when location changes
+  useEffect(() => {
+    if (user && location.pathname) {
+      console.log("Navigation path changed:", location.pathname);
+      // Add a small delay to ensure the page has fully loaded
+      const timer = setTimeout(() => {
+        updateNavigationTimestamp(location.pathname);
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
+  }, [location.pathname, user, updateNavigationTimestamp]);
 
   const handleLogout = async () => {
     try {
       console.log("Logging out user...");
-      await signOut();
-      // Clear any stored kingdom setup flags
+      // Clear any stored kingdom setup flags before signOut
       localStorage.removeItem("kingdomSetupCompleted");
       localStorage.removeItem("redirectedToSetup");
+      localStorage.removeItem("setupCompleted");
+
+      await signOut();
+
       // Force navigation to login page
+      console.log("Navigating to login page after logout");
       navigate("/login", { replace: true });
     } catch (error) {
       console.error("Logout error:", error);
+      // Even if there's an error, try to navigate to login
+      navigate("/login", { replace: true });
     }
   };
 
