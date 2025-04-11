@@ -1852,16 +1852,18 @@ const KingdomSetup = ({
                                   eventData,
                                 );
 
-                                const { data: eventData, error: eventError } =
-                                  await supabase
-                                    .from("user_events")
-                                    .insert({
-                                      user_id: user?.id,
-                                      event_type: "kingdom_setup_completed",
-                                      event_data: eventData,
-                                      created_at: timestamp,
-                                    })
-                                    .select();
+                                const {
+                                  data: insertedEventData,
+                                  error: eventError,
+                                } = await supabase
+                                  .from("user_events")
+                                  .insert({
+                                    user_id: user?.id,
+                                    event_type: "kingdom_setup_completed",
+                                    event_data: eventData,
+                                    created_at: timestamp,
+                                  })
+                                  .select();
 
                                 if (eventError) {
                                   console.error(
@@ -1871,9 +1873,9 @@ const KingdomSetup = ({
                                 } else {
                                   console.log(
                                     "Successfully tracked setup completion event with ID:",
-                                    eventData?.[0]?.id,
+                                    insertedEventData?.[0]?.id,
                                     "\nEvent data:",
-                                    eventData,
+                                    insertedEventData,
                                   );
 
                                   // Also track a separate onboarding_completed event
