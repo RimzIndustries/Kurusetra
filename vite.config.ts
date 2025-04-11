@@ -14,7 +14,9 @@ export default defineConfig({
   },
   plugins: [
     react({
-      plugins: [["@swc/plugin-emotion", {}]],
+      fastRefresh: {
+        exclude: [/MultiplayerContext\.tsx$/],
+      },
     }),
     tempo(),
   ],
@@ -27,9 +29,5 @@ export default defineConfig({
   server: {
     // @ts-ignore
     allowedHosts: true,
-  },
-  esbuild: {
-    jsx: "automatic",
-    jsxImportSource: "react",
   },
 });

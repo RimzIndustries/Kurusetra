@@ -26,13 +26,12 @@ export default function Login() {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
-  const { signIn, user, isNewUser, userProfile, supabase } = useAuth();
+  const { signIn, user, isNewUser } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      console.log("User already logged in, redirecting to dashboard");
       navigate("/");
     }
   }, [user, navigate]);
@@ -91,36 +90,13 @@ export default function Login() {
       console.log("Login successful, navigating to home");
 
       // Short delay for success animation
-      setTimeout(async () => {
-        try {
-          // Check if user has completed setup by checking profile data
-          const { data: profileData } = await supabase
-            .from("user_profiles")
-            .select("race, kingdom_name")
-            .eq("user_id", data.user.id)
-            .single();
-
-          const hasCompletedKingdomSetup = !!(
-            profileData?.race && profileData?.kingdom_name
-          );
-
-          if (hasCompletedKingdomSetup) {
-            // If profile data indicates setup is complete, set localStorage flag
-            localStorage.setItem("setupCompleted", "true");
-            console.log(
-              "Setup detected as complete from profile data, redirecting to dashboard",
-            );
-            navigate("/");
-          } else if (isNewUser()) {
-            console.log("Redirecting new user to kingdom setup");
-            navigate("/setup-kingdom");
-          } else {
-            console.log("Redirecting existing user to dashboard");
-            navigate("/");
-          }
-        } catch (error) {
-          console.error("Error checking profile data:", error);
-          // Default to dashboard if there's an error checking profile
+      setTimeout(() => {
+        // Redirect new users to setup, existing users to dashboard
+        if (isNewUser()) {
+          console.log("Redirecting new user to kingdom setup");
+          navigate("/setup-kingdom");
+        } else {
+          console.log("Redirecting existing user to dashboard");
           navigate("/");
         }
       }, 1000);

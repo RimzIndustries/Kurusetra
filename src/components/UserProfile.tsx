@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import {
@@ -23,23 +23,8 @@ import {
 } from "lucide-react";
 
 const UserProfile = () => {
-  const { user, userProfile, signOut, getNavigationStats } = useAuth();
+  const { user, userProfile, signOut } = useAuth();
   const navigate = useNavigate();
-  const [navigationStats, setNavigationStats] = useState<Record<
-    string,
-    any
-  > | null>(null);
-
-  useEffect(() => {
-    const fetchNavigationStats = async () => {
-      const stats = await getNavigationStats();
-      setNavigationStats(stats);
-    };
-
-    if (user) {
-      fetchNavigationStats();
-    }
-  }, [user, getNavigationStats]);
 
   // Get race details based on selected race ID
   const getRaceDetails = () => {
@@ -139,21 +124,8 @@ const UserProfile = () => {
   };
 
   const handleSignOut = async () => {
-    try {
-      console.log("UserProfile: Signing out");
-      // Clear any stored kingdom setup flags
-      localStorage.removeItem("kingdomSetupCompleted");
-      localStorage.removeItem("redirectedToSetup");
-      localStorage.removeItem("setupCompleted");
-
-      await signOut();
-      console.log("UserProfile: Sign out successful, navigating to login");
-      navigate("/login", { replace: true });
-    } catch (error) {
-      console.error("UserProfile: Error during sign out:", error);
-      // Even if there's an error, try to navigate to login
-      navigate("/login", { replace: true });
-    }
+    await signOut();
+    navigate("/login");
   };
 
   return (

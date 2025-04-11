@@ -9,7 +9,7 @@ type ProtectedRouteProps = {
 export default function ProtectedRoute({
   redirectPath = "/login",
 }: ProtectedRouteProps) {
-  const { user, userProfile, loading, hasCompletedSetup } = useAuth();
+  const { user, loading, hasCompletedSetup } = useAuth();
   const location = useLocation();
 
   console.log(
@@ -60,52 +60,11 @@ export default function ProtectedRoute({
     return <Navigate to={redirectPath} replace />;
   }
 
-  // Use the hasCompletedSetup function directly which already checks both localStorage and profile data
-  const setupCompleted = hasCompletedSetup();
-
-  console.log("ProtectedRoute: Setup completion check result:", setupCompleted);
-
   // Redirect to kingdom setup if user hasn't completed setup
   // Skip this check if already on the setup page to avoid redirect loops
-  if (!setupCompleted && location.pathname !== "/setup-kingdom") {
-    // Check if we should force a direct check of the database
-    const shouldCheckDatabase = !userProfile?.race && !userProfile?.kingdomName;
-
-    if (shouldCheckDatabase) {
-      // We'll do a direct database check in the component
-      console.log(
-        "ProtectedRoute: Will check database directly for setup status",
-      );
-    } else {
-      console.log("ProtectedRoute: Setup not completed, redirecting to setup");
-      // Remove any flags that might prevent redirection
-      localStorage.removeItem("redirectedToSetup");
-      return (
-        <Navigate to="/setup-kingdom" replace state={{ from: location }} />
-      );
-    }
-  }
-
-  // If setup is already completed, redirect to dashboard from setup page
-  if (setupCompleted) {
-    // If user is on setup page, redirect to dashboard
-    if (location.pathname === "/setup-kingdom") {
-      console.log(
-        "ProtectedRoute: Setup already completed, redirecting to dashboard",
-      );
-      // Store in localStorage to prevent future redirects
-      localStorage.setItem("setupCompleted", "true");
-      return <Navigate to="/dashboard" replace />;
-    }
-    // If user just logged in (coming from login), redirect to dashboard
-    if (location.state?.from?.pathname === "/login") {
-      console.log(
-        "ProtectedRoute: User logged in and setup already completed, redirecting to dashboard",
-      );
-      // Store in localStorage to prevent future redirects
-      localStorage.setItem("setupCompleted", "true");
-      return <Navigate to="/dashboard" replace />;
-    }
+  if (!hasCompletedSetup() && location.pathname !== "/setup-kingdom") {
+    console.log("ProtectedRoute: Setup not completed, redirecting to setup");
+    return <Navigate to="/setup-kingdom" replace state={{ from: location }} />;
   }
 
   console.log("ProtectedRoute: All checks passed, rendering outlet");

@@ -48,7 +48,6 @@ import {
   Compass,
   Wifi,
   WifiOff,
-  Building,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -60,23 +59,6 @@ type AttackAction = {
   troops: Record<string, number>;
   spies: Record<string, number>;
   attackTime: number;
-  tactic?: "direct" | "flanking" | "siege" | "guerrilla";
-  status: "pending" | "confirmed" | "rejected" | "completed";
-  timestamp: number;
-  prediction?: {
-    travelTime: string;
-    successProbability: number;
-    estimatedCompletionTime: number;
-  };
-  serverResponse?: any;
-};
-
-type ScoutAction = {
-  id: string;
-  targetKingdomId: string;
-  spies: Record<string, number>;
-  scoutTime: number;
-  scoutType: "basic" | "detailed" | "infiltration";
   status: "pending" | "confirmed" | "rejected" | "completed";
   timestamp: number;
   prediction?: {
@@ -94,26 +76,6 @@ interface CombatInterfaceProps {
     race: string;
     strength: number;
     distance: number;
-    resources?: {
-      gold: number;
-      food: number;
-      population: number;
-    };
-    defenses?: {
-      walls: number;
-      towers: number;
-      traps: number;
-    };
-    activity?: {
-      lastActive: string;
-      buildingInProgress?: string;
-      militaryActivity?: string;
-    };
-    scoutingReport?: {
-      timestamp: string;
-      accuracy: number;
-      details: string;
-    };
   }>;
   troops?: Array<{
     id: string;
@@ -130,21 +92,82 @@ interface CombatInterfaceProps {
     count: number;
   }>;
   onAttackLaunched?: (attackData: AttackAction) => Promise<any>;
-  onScoutLaunched?: (scoutData: ScoutAction) => Promise<any>;
 }
 
 const CombatInterface: React.FC<CombatInterfaceProps> = ({
-  kingdoms = [],
-  troops = [],
-  spies = [],
+  kingdoms = [
+    {
+      id: "1",
+      name: "Hastinapura",
+      race: "Ksatriya",
+      strength: 85,
+      distance: 12,
+    },
+    {
+      id: "2",
+      name: "Indraprastha",
+      race: "Wanamarta",
+      strength: 72,
+      distance: 8,
+    },
+    { id: "3", name: "Dwaraka", race: "Wirabumi", strength: 65, distance: 15 },
+    { id: "4", name: "Matsya", race: "Jatayu", strength: 60, distance: 10 },
+    { id: "5", name: "Magadha", race: "Kurawa", strength: 78, distance: 14 },
+  ],
+  troops = [
+    {
+      id: "1",
+      name: "Infantry",
+      type: "Ground",
+      count: 500,
+      power: 5,
+      speed: 2,
+    },
+    {
+      id: "2",
+      name: "Archers",
+      type: "Ranged",
+      count: 300,
+      power: 8,
+      speed: 3,
+    },
+    {
+      id: "3",
+      name: "Cavalry",
+      type: "Mounted",
+      count: 150,
+      power: 12,
+      speed: 5,
+    },
+    {
+      id: "4",
+      name: "War Elephants",
+      type: "Heavy",
+      count: 50,
+      power: 20,
+      speed: 1,
+    },
+  ],
+  spies = [
+    { id: "1", name: "Scout", skill: 60, count: 10 },
+    { id: "2", name: "Infiltrator", skill: 75, count: 5 },
+    { id: "3", name: "Saboteur", skill: 85, count: 3 },
+  ],
   onAttackLaunched = async (attackData: AttackAction) => {
-    // This should be replaced with actual API call
-    return Promise.resolve({
-      success: true,
-      attackId: attackData.id,
-      message: "Attack processed by server",
-      actualTravelTime: attackData.prediction?.travelTime,
-      actualSuccessProbability: attackData.prediction?.successProbability,
+    // Mock server response with a delay to simulate network latency
+    return new Promise((resolve) => {
+      setTimeout(
+        () => {
+          resolve({
+            success: Math.random() > 0.1, // 90% success rate for demo
+            attackId: attackData.id,
+            message: "Attack processed by server",
+            actualTravelTime: attackData.prediction?.travelTime,
+            actualSuccessProbability: attackData.prediction?.successProbability,
+          });
+        },
+        800 + Math.random() * 1200,
+      ); // Random delay between 800-2000ms
     });
   },
 }) => {
@@ -158,16 +181,6 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
     {},
   );
   const [attackTime, setAttackTime] = useState<number>(0);
-  const [selectedTactic, setSelectedTactic] = useState<
-    "direct" | "flanking" | "siege" | "guerrilla"
-  >("direct");
-  const [scoutType, setScoutType] = useState<
-    "basic" | "detailed" | "infiltration"
-  >("basic");
-  const [showScoutingInterface, setShowScoutingInterface] = useState(false);
-  const [scoutingReports, setScoutingReports] = useState<Record<string, any>>(
-    {},
-  );
 
   // Client-side prediction states
   const [pendingAttacks, setPendingAttacks] = useState<AttackAction[]>([]);
@@ -341,7 +354,6 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
       troops: { ...selectedTroops },
       spies: { ...selectedSpies },
       attackTime,
-      tactic: selectedTactic,
       status: "pending",
       timestamp: Date.now(),
       prediction: {
@@ -397,97 +409,6 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
       setPendingAttacks((prev) =>
         prev.map((a) =>
           a.id === attackId
-            ? {
-                ...a,
-                status: "rejected",
-                serverResponse: { error: "Network error" },
-              }
-            : a,
-        ),
-      );
-    }
-  };
-
-  // Handle scouting mission
-  const handleLaunchScout = async () => {
-    if (!selectedKingdom) return;
-
-    // Generate a unique ID for this scouting mission
-    const scoutId = `scout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    // Create the scout action with prediction
-    const scoutAction: ScoutAction = {
-      id: scoutId,
-      targetKingdomId: selectedKingdom,
-      spies: { ...selectedSpies },
-      scoutTime: 0, // Immediate scouting
-      scoutType,
-      status: "pending",
-      timestamp: Date.now(),
-      prediction: {
-        travelTime: calculateTravelTime(),
-        successProbability: calculateSuccessProbability() + 10, // Scouting has higher success rate
-        estimatedCompletionTime:
-          Date.now() +
-          (calculateTravelTime().includes("hours")
-            ? parseInt(calculateTravelTime().split(" ")[0]) * 60 * 60 * 1000
-            : 3600000),
-      },
-    };
-
-    // Update UI with predicted result
-    setPendingAttacks((prev) => [...prev, scoutAction as any]);
-
-    // Clear selection for next scouting mission
-    setSelectedSpies({});
-    setShowScoutingInterface(false);
-
-    try {
-      if (isOnline) {
-        // Mock scouting response for now
-        setTimeout(() => {
-          // Update kingdom with scouting report
-          const kingdom = kingdoms.find((k) => k.id === selectedKingdom);
-          if (kingdom) {
-            const accuracy =
-              scoutType === "basic" ? 70 : scoutType === "detailed" ? 85 : 95;
-            const scoutingReport = {
-              timestamp: new Date().toLocaleString(),
-              accuracy,
-              details: `Our spies have gathered ${scoutType} intelligence on ${kingdom.name}. Their defenses are ${kingdom.defenses?.walls ? `Level ${kingdom.defenses.walls}` : "unknown"} and they have approximately ${kingdom.resources?.gold ? kingdom.resources.gold : "unknown"} gold.`,
-            };
-
-            // Store scouting report
-            setScoutingReports((prev) => ({
-              ...prev,
-              [selectedKingdom]: scoutingReport,
-            }));
-
-            // Move from pending to confirmed
-            setPendingAttacks((prev) => prev.filter((a) => a.id !== scoutId));
-            setConfirmedAttacks((prev) => [
-              ...prev,
-              {
-                ...scoutAction,
-                status: "confirmed",
-                serverResponse: {
-                  success: true,
-                  message: "Scouting mission successful",
-                },
-              } as any,
-            ]);
-          }
-        }, 2000);
-      } else {
-        // Store in offline queue
-        offlineActionsQueue.current.push(scoutAction as any);
-      }
-    } catch (error) {
-      console.error("Error launching scouting mission:", error);
-      // Mark as failed in UI
-      setPendingAttacks((prev) =>
-        prev.map((a) =>
-          a.id === scoutId
             ? {
                 ...a,
                 status: "rejected",
@@ -594,35 +515,37 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
           onValueChange={setCombatType}
         >
           <TabsList className="grid w-full grid-cols-2 mb-10 p-1 bg-neuro-bg shadow-neuro-concave rounded-xl overflow-hidden relative">
+            <motion.div
+              className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-red-500 to-amber-500 z-10"
+              animate={{
+                width: "50%",
+                x: combatType === "warfare" ? "0%" : "50%",
+              }}
+              transition={{ duration: 0.3 }}
+            />
             <TabsTrigger
               value="warfare"
-              className="data-[state=active]:bg-neuro-primary/10 data-[state=active]:text-neuro-primary"
+              className="flex items-center gap-2 py-4 transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-transparent data-[state=active]:to-muted/80"
             >
               <motion.div
                 whileHover={{ scale: 1.2, rotate: 10 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                className="flex-shrink-0"
               >
                 <Sword className="h-5 w-5 text-red-500" />
               </motion.div>
-              <span className="font-medium text-base flex-grow text-center">
-                Direct Warfare
-              </span>
+              <span className="font-medium">Direct Warfare</span>
             </TabsTrigger>
             <TabsTrigger
               value="espionage"
-              className="data-[state=active]:bg-neuro-primary/10 data-[state=active]:text-neuro-primary"
+              className="flex items-center gap-2 py-4 transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-transparent data-[state=active]:to-muted/80"
             >
               <motion.div
                 whileHover={{ scale: 1.2 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                className="flex-shrink-0"
               >
                 <Eye className="h-5 w-5 text-blue-500" />
               </motion.div>
-              <span className="font-medium text-base flex-grow text-center">
-                Covert Operations
-              </span>
+              <span className="font-medium">Covert Operations</span>
             </TabsTrigger>
           </TabsList>
 
@@ -720,243 +643,6 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
                                   {kingdom.distance} units
                                 </span>
                               </div>
-
-                              {/* Enhanced kingdom information */}
-                              {kingdom.resources && (
-                                <div className="mt-4">
-                                  <h4 className="text-sm font-semibold mb-2 text-primary">
-                                    Resources
-                                  </h4>
-                                  <div className="grid grid-cols-3 gap-2 text-xs">
-                                    <div className="flex flex-col items-center p-1.5 bg-neuro-bg shadow-neuro-pressed rounded-md">
-                                      <span className="text-amber-500 font-medium">
-                                        Gold
-                                      </span>
-                                      <span>{kingdom.resources.gold}</span>
-                                    </div>
-                                    <div className="flex flex-col items-center p-1.5 bg-neuro-bg shadow-neuro-pressed rounded-md">
-                                      <span className="text-green-500 font-medium">
-                                        Food
-                                      </span>
-                                      <span>{kingdom.resources.food}</span>
-                                    </div>
-                                    <div className="flex flex-col items-center p-1.5 bg-neuro-bg shadow-neuro-pressed rounded-md">
-                                      <span className="text-blue-500 font-medium">
-                                        Population
-                                      </span>
-                                      <span>
-                                        {kingdom.resources.population}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
-                              {kingdom.defenses && (
-                                <div className="mt-4">
-                                  <h4 className="text-sm font-semibold mb-2 text-primary">
-                                    Defenses
-                                  </h4>
-                                  <div className="grid grid-cols-3 gap-2 text-xs">
-                                    <div className="flex flex-col items-center p-1.5 bg-neuro-bg shadow-neuro-pressed rounded-md">
-                                      <span className="text-stone-500 font-medium">
-                                        Walls
-                                      </span>
-                                      <span>
-                                        Level {kingdom.defenses.walls}
-                                      </span>
-                                    </div>
-                                    <div className="flex flex-col items-center p-1.5 bg-neuro-bg shadow-neuro-pressed rounded-md">
-                                      <span className="text-stone-500 font-medium">
-                                        Towers
-                                      </span>
-                                      <span>
-                                        Level {kingdom.defenses.towers}
-                                      </span>
-                                    </div>
-                                    <div className="flex flex-col items-center p-1.5 bg-neuro-bg shadow-neuro-pressed rounded-md">
-                                      <span className="text-stone-500 font-medium">
-                                        Traps
-                                      </span>
-                                      <span>
-                                        Level {kingdom.defenses.traps}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
-                              {kingdom.activity && (
-                                <div className="mt-4">
-                                  <h4 className="text-sm font-semibold mb-2 text-primary">
-                                    Recent Activity
-                                  </h4>
-                                  <div className="space-y-1 text-xs">
-                                    <div className="flex justify-between">
-                                      <span>Last Active:</span>
-                                      <span className="font-medium">
-                                        {kingdom.activity.lastActive}
-                                      </span>
-                                    </div>
-                                    {kingdom.activity.buildingInProgress && (
-                                      <div className="flex justify-between">
-                                        <span>Building:</span>
-                                        <span className="font-medium">
-                                          {kingdom.activity.buildingInProgress}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {kingdom.activity.militaryActivity && (
-                                      <div className="flex justify-between">
-                                        <span>Military:</span>
-                                        <span className="font-medium">
-                                          {kingdom.activity.militaryActivity}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Scouting report if available */}
-                              {kingdom.scoutingReport && (
-                                <div className="mt-4 p-2 border border-blue-500/30 rounded-md bg-blue-500/5">
-                                  <h4 className="text-sm font-semibold mb-1 text-blue-500">
-                                    Scouting Report
-                                  </h4>
-                                  <div className="space-y-1 text-xs">
-                                    <div className="flex justify-between">
-                                      <span>Timestamp:</span>
-                                      <span className="font-medium">
-                                        {kingdom.scoutingReport.timestamp}
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Accuracy:</span>
-                                      <span className="font-medium">
-                                        {kingdom.scoutingReport.accuracy}%
-                                      </span>
-                                    </div>
-                                    <p className="text-xs mt-1">
-                                      {kingdom.scoutingReport.details}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Scout button */}
-                              <div className="mt-4">
-                                <Button
-                                  size="sm"
-                                  className="w-full text-xs flex items-center justify-center gap-1 bg-neuro-bg text-neuro-primary shadow-neuro-flat hover:shadow-neuro-pressed border-neuro-primary/20"
-                                  onClick={() =>
-                                    setShowScoutingInterface(
-                                      !showScoutingInterface,
-                                    )
-                                  }
-                                >
-                                  <Eye className="h-3.5 w-3.5" />
-                                  {showScoutingInterface
-                                    ? "Hide Scouting"
-                                    : "Scout Kingdom"}
-                                </Button>
-                              </div>
-
-                              {/* Scouting interface */}
-                              {showScoutingInterface && (
-                                <div className="mt-4 p-3 border border-blue-500/20 rounded-md bg-blue-500/5">
-                                  <h4 className="text-sm font-semibold mb-2 text-blue-500">
-                                    Scouting Mission
-                                  </h4>
-
-                                  <div className="space-y-3">
-                                    <div className="space-y-1">
-                                      <Label
-                                        htmlFor="scout-type"
-                                        className="text-xs"
-                                      >
-                                        Scout Type
-                                      </Label>
-                                      <Select
-                                        value={scoutType}
-                                        onValueChange={(value: any) =>
-                                          setScoutType(value)
-                                        }
-                                      >
-                                        <SelectTrigger
-                                          id="scout-type"
-                                          className="h-8 text-xs"
-                                        >
-                                          <SelectValue placeholder="Select scout type" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="basic">
-                                            Basic Reconnaissance
-                                          </SelectItem>
-                                          <SelectItem value="detailed">
-                                            Detailed Intelligence
-                                          </SelectItem>
-                                          <SelectItem value="infiltration">
-                                            Deep Infiltration
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">
-                                        Select Spies
-                                      </Label>
-                                      <div className="space-y-2">
-                                        {spies.map((spy) => (
-                                          <div
-                                            key={spy.id}
-                                            className="flex justify-between items-center text-xs"
-                                          >
-                                            <span>
-                                              {spy.name} (Skill: {spy.skill})
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                              <Input
-                                                type="number"
-                                                min="0"
-                                                max={spy.count}
-                                                value={
-                                                  selectedSpies[spy.id] || 0
-                                                }
-                                                onChange={(e) =>
-                                                  handleSpySelection(
-                                                    spy.id,
-                                                    parseInt(e.target.value) ||
-                                                      0,
-                                                  )
-                                                }
-                                                className="w-16 h-6 text-xs"
-                                              />
-                                              <span>/ {spy.count}</span>
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </div>
-
-                                    <Button
-                                      size="sm"
-                                      className="w-full mt-2 text-xs flex items-center justify-center gap-1 bg-neuro-bg text-neuro-primary shadow-neuro-flat hover:shadow-neuro-pressed border-neuro-primary/20"
-                                      disabled={
-                                        Object.values(selectedSpies).reduce(
-                                          (sum, val) => sum + val,
-                                          0,
-                                        ) === 0
-                                      }
-                                      onClick={() => handleLaunchScout()}
-                                    >
-                                      <Eye className="h-3.5 w-3.5" />
-                                      Launch Scouting Mission
-                                    </Button>
-                                  </div>
-                                </div>
-                              )}
                             </>
                           );
                         })()}
@@ -1131,102 +817,6 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
                       </p>
                     </div>
 
-                    {combatType === "warfare" && (
-                      <div className="space-y-2">
-                        <Label htmlFor="combat-tactic">Combat Tactic</Label>
-                        <Select
-                          value={selectedTactic}
-                          onValueChange={(value: any) =>
-                            setSelectedTactic(value)
-                          }
-                        >
-                          <SelectTrigger id="combat-tactic">
-                            <SelectValue placeholder="Select a tactic" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="direct">
-                              <div className="flex items-center gap-2">
-                                <Sword className="h-4 w-4 text-red-500" />
-                                <div>
-                                  <span className="font-medium">
-                                    Direct Assault
-                                  </span>
-                                  <p className="text-xs text-muted-foreground">
-                                    Balanced approach
-                                  </p>
-                                </div>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="flanking">
-                              <div className="flex items-center gap-2">
-                                <ArrowRight className="h-4 w-4 text-blue-500" />
-                                <div>
-                                  <span className="font-medium">
-                                    Flanking Maneuver
-                                  </span>
-                                  <p className="text-xs text-muted-foreground">
-                                    Speed bonus, defense penalty
-                                  </p>
-                                </div>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="siege">
-                              <div className="flex items-center gap-2">
-                                <Building className="h-4 w-4 text-amber-500" />
-                                <div>
-                                  <span className="font-medium">
-                                    Siege Warfare
-                                  </span>
-                                  <p className="text-xs text-muted-foreground">
-                                    Building damage bonus, speed penalty
-                                  </p>
-                                </div>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="guerrilla">
-                              <div className="flex items-center gap-2">
-                                <Flame className="h-4 w-4 text-green-500" />
-                                <div>
-                                  <span className="font-medium">
-                                    Guerrilla Tactics
-                                  </span>
-                                  <p className="text-xs text-muted-foreground">
-                                    Resource damage bonus, strength penalty
-                                  </p>
-                                </div>
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <div className="p-2 mt-1 text-xs bg-neuro-bg shadow-neuro-pressed rounded-md">
-                          {selectedTactic === "direct" && (
-                            <p>
-                              Standard military approach with balanced offense
-                              and defense.
-                            </p>
-                          )}
-                          {selectedTactic === "flanking" && (
-                            <p>
-                              Attack from multiple sides to bypass defenses.
-                              Faster but less powerful.
-                            </p>
-                          )}
-                          {selectedTactic === "siege" && (
-                            <p>
-                              Focus on destroying buildings and defenses. Slower
-                              but more devastating.
-                            </p>
-                          )}
-                          {selectedTactic === "guerrilla" && (
-                            <p>
-                              Hit-and-run tactics targeting resources. Less
-                              direct damage but disrupts economy.
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
                     <Separator />
 
                     <div className="space-y-4 p-4 bg-neuro-bg rounded-lg shadow-neuro-pressed transition-all duration-300 hover:shadow-neuro-concave">
@@ -1294,7 +884,8 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
                         className="w-full"
                       >
                         <Button
-                          className="w-full py-6 text-base font-semibold transition-all duration-300 bg-neuro-bg text-neuro-primary shadow-neuro-flat hover:shadow-neuro-pressed border-neuro-primary/20 relative overflow-hidden group"
+                          variant="neuro-convex"
+                          className="w-full py-6 text-base font-semibold transition-all duration-300 bg-neuro-bg text-foreground relative overflow-hidden group"
                           disabled={
                             !selectedKingdom ||
                             (combatType === "warfare"
@@ -1357,12 +948,12 @@ const CombatInterface: React.FC<CombatInterfaceProps> = ({
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter className="mt-4">
-                        <AlertDialogCancel className="border-neuro-primary/30 text-foreground hover:bg-neuro-primary/10 font-medium">
+                        <AlertDialogCancel className="font-medium">
                           Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction
                           onClick={handleLaunchAttack}
-                          className="bg-neuro-bg text-neuro-primary shadow-neuro-flat hover:shadow-neuro-pressed border-neuro-primary/20 font-medium"
+                          className="bg-primary hover:bg-primary/90 font-medium"
                         >
                           Confirm
                         </AlertDialogAction>
