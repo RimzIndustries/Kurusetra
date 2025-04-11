@@ -1367,7 +1367,10 @@ const KingdomSetup = ({
                           setShowSuccess(true);
                           setTimeout(async () => {
                             try {
-                              await updateUserProfile({
+                              console.log(
+                                "Saving kingdom setup data to user profile",
+                              );
+                              const result = await updateUserProfile({
                                 race: selectedRace,
                                 kingdomName: kingdomName.trim(),
                                 kingdomDescription: kingdomDescription.trim(),
@@ -1375,10 +1378,25 @@ const KingdomSetup = ({
                                 kingdomCapital: kingdomCapital.trim(),
                                 specialty: raceDetails.specialty,
                                 zodiac: selectedZodiac,
+                                setupCompleted: true,
                               });
+
+                              console.log(
+                                "Kingdom setup complete, profile updated:",
+                                result,
+                              );
                               // Navigate after showing success animation
-                              setTimeout(() => navigate("/"), 500);
+                              setTimeout(() => {
+                                console.log(
+                                  "Redirecting to home after successful setup",
+                                );
+                                navigate("/");
+                              }, 500);
                             } catch (err: any) {
+                              console.error(
+                                "Error saving kingdom information:",
+                                err,
+                              );
                               setShowSuccess(false);
                               setError(
                                 err.message ||

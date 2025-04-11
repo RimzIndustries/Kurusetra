@@ -4,8 +4,12 @@ import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 type UserProfile = {
   race?: string;
   kingdomName?: string;
+  kingdomDescription?: string;
+  kingdomMotto?: string;
+  kingdomCapital?: string;
   zodiac?: string;
   specialty?: string;
+  setupCompleted?: boolean;
 };
 
 type AuthContextType = {
@@ -240,6 +244,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
+      console.log("Updating user profile with data:", profile);
+
       // Update local state
       setUserProfile((prev) => ({ ...prev, ...profile }));
 
@@ -249,14 +255,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           user_id: user.id,
           race: profile.race || userProfile.race,
           kingdom_name: profile.kingdomName || userProfile.kingdomName,
+          kingdom_description:
+            profile.kingdomDescription || userProfile.kingdomDescription,
+          kingdom_motto: profile.kingdomMotto || userProfile.kingdomMotto,
+          kingdom_capital: profile.kingdomCapital || userProfile.kingdomCapital,
           zodiac: profile.zodiac || userProfile.zodiac,
           specialty: profile.specialty || userProfile.specialty,
           updated_at: new Date().toISOString(),
+          setup_completed: true,
         },
         { onConflict: "user_id" },
       );
 
       if (error) throw error;
+
+      console.log("User profile updated successfully");
+      return { success: true };
     } catch (error) {
       console.error("Error updating user profile:", error);
       throw error;
@@ -264,7 +278,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const hasCompletedSetup = () => {
-    return !!(userProfile.race && userProfile.kingdomName);
+    // Check if the user has completed the kingdom setup process
+    // This is true if they have both a race and kingdom name set
+    // or if the setupCompleted flag is explicitly set to true
+    return !!(
+      userProfile.setupCompleted ||
+      (userProfile.race && userProfile.kingdomName)
+    );
   };
 
   const isNewUser = () => {
@@ -309,11 +329,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Custom hook must be a named function declaration at the top level for Fast Refresh compatibility
-export function useAuth() {
+// Define the hook as a named function declaration for Fast Refresh compatibility
+function useAuthHook() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
+
+// Export the hook as a named export
+export const useAuth = useAuthHook;
