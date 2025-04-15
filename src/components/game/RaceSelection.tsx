@@ -210,13 +210,14 @@ const RaceSelection = ({
               animate={{ opacity: 0.2 }}
               transition={{ duration: 1, delay: 0.3 }}
             />
-            <CardTitle className="text-3xl font-bold">
+            <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary/80 via-amber-500 to-primary animate-gradient">
               Choose Your Race
             </CardTitle>
             <CardDescription className="text-lg">
               Select one of the 8 unique races to lead your kingdom in the
               Kurusetra universe
             </CardDescription>
+            <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-amber-500 via-red-500 to-purple-500 opacity-70"></div>
           </CardHeader>
           <CardContent>
             <Tabs
@@ -225,12 +226,35 @@ const RaceSelection = ({
               className="w-full"
             >
               <div className="flex flex-col space-y-8">
-                <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2 p-1 bg-neuro-bg shadow-neuro-concave rounded-xl overflow-hidden relative">
+                  <motion.div
+                    className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-amber-500 to-red-500 z-10"
+                    animate={{
+                      width: "25%",
+                      x:
+                        activeTab === "ksatriya"
+                          ? "0%"
+                          : activeTab === "wanamarta"
+                            ? "25%"
+                            : activeTab === "wirabumi"
+                              ? "50%"
+                              : activeTab === "jatayu"
+                                ? "75%"
+                                : activeTab === "kurawa"
+                                  ? "100%"
+                                  : activeTab === "tibrasara"
+                                    ? "125%"
+                                    : activeTab === "raksasa"
+                                      ? "150%"
+                                      : "175%",
+                    }}
+                    transition={{ duration: 0.3 }}
+                  />
                   {races.map((race) => (
                     <TabsTrigger
                       key={race.id}
                       value={race.id}
-                      className={`flex items-center gap-2 py-3 transition-all duration-300 ${selectedRace === race.id && animateSelection ? "scale-105" : ""}`}
+                      className={`flex items-center gap-2 py-3 transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-transparent data-[state=active]:to-muted/80 ${selectedRace === race.id && animateSelection ? "scale-105" : ""}`}
                       onClick={() => handleSelectRace(race.id)}
                       onMouseEnter={() => setHoverEffect(race.id)}
                       onMouseLeave={() => setHoverEffect(null)}

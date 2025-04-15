@@ -22,7 +22,14 @@ const UserOnboarding = () => {
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
-      navigate("/setup-kingdom");
+      // Check if we're in a storyboard environment
+      const isStoryboard = window.location.pathname.includes("/tempobook/");
+      if (isStoryboard) {
+        console.log("In storyboard environment, not navigating");
+        // Just show success state in storyboard
+      } else {
+        navigate("/setup-kingdom");
+      }
     }
   };
 
@@ -33,7 +40,14 @@ const UserOnboarding = () => {
   };
 
   const handleSkip = () => {
-    navigate("/setup-kingdom");
+    // Check if we're in a storyboard environment
+    const isStoryboard = window.location.pathname.includes("/tempobook/");
+    if (isStoryboard) {
+      console.log("In storyboard environment, not navigating");
+      // Just show success state in storyboard
+    } else {
+      navigate("/setup-kingdom");
+    }
   };
 
   return (

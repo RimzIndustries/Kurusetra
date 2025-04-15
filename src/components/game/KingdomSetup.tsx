@@ -1390,7 +1390,20 @@ const KingdomSetup = ({
                                 console.log(
                                   "Redirecting to dashboard after successful setup",
                                 );
-                                navigate("/dashboard");
+                                // Check if we're in a storyboard environment
+                                const isStoryboard =
+                                  window.location.pathname.includes(
+                                    "/tempobook/",
+                                  );
+                                if (isStoryboard) {
+                                  console.log(
+                                    "In storyboard environment, not navigating",
+                                  );
+                                  // Just show success state in storyboard
+                                } else {
+                                  console.log("Redirecting to dashboard");
+                                  navigate("/dashboard", { replace: true });
+                                }
                               }, 500);
                             } catch (err: any) {
                               console.error(

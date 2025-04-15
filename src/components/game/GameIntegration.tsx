@@ -161,11 +161,14 @@ const GameIntegration = () => {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
       >
         {/* Kingdom status */}
-        <Card className="bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-convex transition-all duration-300 neuro-glow">
+        <Card className="bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-convex transition-all duration-300 neuro-glow relative overflow-hidden">
+          <div className="absolute -z-10 w-64 h-64 rounded-full bg-amber-500/5 opacity-20 blur-3xl -top-20 -left-20"></div>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Crown className="h-5 w-5 text-amber-500" />
-              <span>{userProfile.kingdomName || "Your Kingdom"}</span>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-amber-700">
+                {userProfile.kingdomName || "Your Kingdom"}
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -352,17 +355,25 @@ const GameIntegration = () => {
         transition={{ duration: 0.5, delay: 0.3 }}
         className="flex flex-wrap gap-2 justify-center"
       >
-        <Button className="bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-300 neuro-glow">
-          <Building className="h-4 w-4 mr-2" /> Manage Buildings
+        <Button className="bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-300 neuro-glow relative overflow-hidden group">
+          <Building className="h-4 w-4 mr-2 group-hover:text-emerald-500 transition-colors duration-300" />
+          <span className="relative z-10">Manage Buildings</span>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
         </Button>
-        <Button className="bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-300 neuro-glow">
-          <Sword className="h-4 w-4 mr-2" /> Train Troops
+        <Button className="bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-300 neuro-glow relative overflow-hidden group">
+          <Sword className="h-4 w-4 mr-2 group-hover:text-red-500 transition-colors duration-300" />
+          <span className="relative z-10">Train Troops</span>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
         </Button>
-        <Button className="bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-300 neuro-glow">
-          <Flag className="h-4 w-4 mr-2" /> View Map
+        <Button className="bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-300 neuro-glow relative overflow-hidden group">
+          <Flag className="h-4 w-4 mr-2 group-hover:text-blue-500 transition-colors duration-300" />
+          <span className="relative z-10">View Map</span>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
         </Button>
-        <Button className="bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-300 neuro-glow">
-          <Users className="h-4 w-4 mr-2" /> Dewan Raja
+        <Button className="bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-300 neuro-glow relative overflow-hidden group">
+          <Users className="h-4 w-4 mr-2 group-hover:text-purple-500 transition-colors duration-300" />
+          <span className="relative z-10">Dewan Raja</span>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
         </Button>
       </motion.div>
     </div>
