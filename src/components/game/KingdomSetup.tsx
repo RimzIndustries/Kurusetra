@@ -482,11 +482,11 @@ const KingdomSetup = ({
                   className="mt-2"
                 >
                   <Button
-                    asChild
                     variant="outline"
                     className="bg-white/90 hover:bg-white border-green-200 text-green-800 hover:text-green-900 shadow-neuro-flat"
+                    onClick={() => navigate("/dashboard", { replace: true })}
                   >
-                    <a href="/dashboard">Go to Dashboard</a>
+                    Go to Dashboard
                   </Button>
                 </motion.div>
 
@@ -1415,6 +1415,9 @@ const KingdomSetup = ({
                                     "In storyboard environment, not navigating",
                                   );
                                   // Just show success state in storyboard
+                                  console.log(
+                                    "In storyboard, not navigating automatically",
+                                  );
                                 } else {
                                   console.log("Redirecting to dashboard");
                                   // Using replace: true prevents the user from going back to the setup page
