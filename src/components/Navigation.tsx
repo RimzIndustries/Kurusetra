@@ -20,8 +20,15 @@ const Navigation = () => {
   const { signOut, user } = useAuth();
 
   const handleLogout = async () => {
-    await signOut();
-    navigate("/login");
+    try {
+      await signOut();
+      // Force navigation after signout completes
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Fallback to regular navigation if there's an error
+      navigate("/login");
+    }
   };
 
   const navItems = [
