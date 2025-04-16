@@ -475,6 +475,21 @@ const KingdomSetup = ({
                   Your journey in the Kurusetra universe begins now.
                 </motion.p>
 
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                  className="mt-2"
+                >
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="bg-white/90 hover:bg-white border-green-200 text-green-800 hover:text-green-900 shadow-neuro-flat"
+                  >
+                    <a href="/dashboard">Go to Dashboard</a>
+                  </Button>
+                </motion.div>
+
                 {/* Success sparkles */}
                 <motion.div
                   className="absolute top-5 left-5"

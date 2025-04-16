@@ -10,13 +10,16 @@ import {
 } from "@/components/ui/tooltip";
 import { Building, Sword, Coins, Users, Shield, Castle } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+
 interface ActionPanelProps {
   onActionSelect?: (
     action: "resources" | "building" | "military" | "alliance" | "combat",
   ) => void;
 }
 
-const ActionPanel = ({ onActionSelect = () => {} }: ActionPanelProps) => {
+const ActionPanel = ({ onActionSelect }: ActionPanelProps) => {
+  const navigate = useNavigate();
   const actions = [
     {
       id: "resources",
@@ -83,7 +86,13 @@ const ActionPanel = ({ onActionSelect = () => {} }: ActionPanelProps) => {
                     <Button
                       variant="neuro"
                       className="h-24 w-full flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:shadow-neuro-pressed active:shadow-neuro-pressed group neuro-hover neuro-active neuro-glow relative overflow-hidden"
-                      onClick={() => onActionSelect(action.id as any)}
+                      onClick={() => {
+                        if (onActionSelect) {
+                          onActionSelect(action.id as any);
+                        } else {
+                          navigate(action.path);
+                        }
+                      }}
                     >
                       <div
                         className={`p-2 rounded-full ${action.iconBg} transition-all duration-300 group-hover:scale-110 z-10`}
