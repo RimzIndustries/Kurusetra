@@ -7,16 +7,21 @@ import { Button } from "@/components/ui/button";
 
 const Home = () => {
   // Get auth context and navigation
-  const { user, hasCompletedSetup } = useAuth();
+  const { user, userProfile, hasCompletedSetup } = useAuth();
   const navigate = useNavigate();
   const [showCombatInterface, setShowCombatInterface] = React.useState(false);
 
   // Check if user has completed setup
   useEffect(() => {
     if (user && !hasCompletedSetup()) {
+      console.log("Home: User has not completed setup, redirecting");
       navigate("/setup-kingdom");
+    } else {
+      console.log("Home: User has completed setup, showing dashboard");
+      // Log user profile for debugging
+      console.log("User profile:", userProfile);
     }
-  }, [user, hasCompletedSetup, navigate]);
+  }, [user, userProfile, hasCompletedSetup, navigate]);
 
   // If combat interface is active, show it
   if (showCombatInterface) {

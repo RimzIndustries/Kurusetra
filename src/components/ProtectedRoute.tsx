@@ -71,8 +71,8 @@ export default function ProtectedRoute({
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Directly redirect to setup-kingdom if user hasn't completed setup
-  // This skips the onboarding step entirely
+  // Redirect to setup-kingdom if user hasn't completed setup
+  // Only redirect if not already on the setup path
   if (!hasCompletedSetup() && location.pathname !== "/setup-kingdom") {
     console.log(
       "ProtectedRoute: Setup not completed, redirecting to setup-kingdom",

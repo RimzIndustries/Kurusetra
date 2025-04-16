@@ -42,9 +42,12 @@ function AppRoutes() {
 
                 {/* Main app routes - only accessible after setup */}
                 <Route element={<Layout />}>
+                  {/* Dashboard routes */}
                   <Route path="/" element={<Home />} />
                   <Route path="/dashboard" element={<Home />} />
                   <Route path="/home" element={<Home />} />
+
+                  {/* Game management routes - as per PRD flow */}
                   <Route path="/resources" element={<ResourceManagement />} />
                   <Route path="/building" element={<Building />} />
                   <Route path="/military" element={<Military />} />
