@@ -231,9 +231,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Clear any local storage or cookies that might be persisting the session
       localStorage.removeItem("supabase.auth.token");
+      localStorage.removeItem(
+        "sb-" + supabaseUrl.split("//")[1].split(".")[0] + "-auth-token",
+      );
 
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut();
+      // Sign out from Supabase with more options
+      const { error } = await supabase.auth.signOut({
+        scope: "global",
+      });
 
       if (error) {
         console.error("Error during sign out:", error);
@@ -336,10 +341,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 // Create a separate hook function outside the provider for Fast Refresh compatibility
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-};
+}

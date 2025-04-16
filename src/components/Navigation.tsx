@@ -22,6 +22,8 @@ const Navigation = () => {
   const handleLogout = async () => {
     try {
       await signOut();
+      // Clear any local storage
+      localStorage.clear();
       // Force navigation after signout completes
       window.location.href = "/login";
     } catch (error) {
