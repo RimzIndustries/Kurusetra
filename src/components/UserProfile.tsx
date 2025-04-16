@@ -142,53 +142,111 @@ const UserProfile = () => {
               <CardTitle>User Profile</CardTitle>
               <CardDescription>Your account information</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                  <User className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium">{user?.email}</p>
-                  <p className="text-sm text-muted-foreground">Account Email</p>
-                </div>
-              </div>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr className="border-b border-border">
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center">
+                          <div className="bg-primary/10 p-2 rounded-full mr-3">
+                            <User className="h-4 w-4 text-primary" />
+                          </div>
+                          <span className="text-sm font-medium">Email</span>
+                        </div>
+                      </td>
+                      <td className="py-3 text-right">
+                        <span className="font-medium">{user?.email}</span>
+                      </td>
+                    </tr>
 
-              <Separator />
+                    <tr className="border-b border-border">
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center">
+                          <div className="bg-primary/10 p-2 rounded-full mr-3">
+                            <Crown className="h-4 w-4 text-primary" />
+                          </div>
+                          <span className="text-sm font-medium">Kingdom</span>
+                        </div>
+                      </td>
+                      <td className="py-3 text-right">
+                        <span className="font-medium">
+                          {userProfile.kingdomName || "No Kingdom"}
+                        </span>
+                      </td>
+                    </tr>
 
-              <div className="flex items-center space-x-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                  <Crown className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium">
-                    {userProfile.kingdomName || "No Kingdom"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Kingdom Name</p>
-                </div>
-              </div>
+                    <tr className="border-b border-border">
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center">
+                          <div className="bg-primary/10 p-2 rounded-full mr-3">
+                            <Shield className="h-4 w-4 text-primary" />
+                          </div>
+                          <span className="text-sm font-medium">Race</span>
+                        </div>
+                      </td>
+                      <td className="py-3 text-right">
+                        <span className="font-medium">{raceDetails.name}</span>
+                      </td>
+                    </tr>
 
-              <Separator />
+                    <tr className="border-b border-border">
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center">
+                          <div className="bg-primary/10 p-2 rounded-full mr-3">
+                            <Calendar className="h-4 w-4 text-primary" />
+                          </div>
+                          <span className="text-sm font-medium">
+                            Current Day
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 text-right">
+                        <span className="font-medium">
+                          {kingdomStats.currentDay}
+                        </span>
+                      </td>
+                    </tr>
 
-              <div className="flex items-center space-x-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                  <Shield className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium">{raceDetails.name}</p>
-                  <p className="text-sm text-muted-foreground">Race</p>
-                </div>
-              </div>
+                    {userProfile.zodiac && (
+                      <tr className="border-b border-border">
+                        <td className="py-3 pr-4">
+                          <div className="flex items-center">
+                            <div className="bg-primary/10 p-2 rounded-full mr-3">
+                              <Mail className="h-4 w-4 text-primary" />
+                            </div>
+                            <span className="text-sm font-medium">Zodiac</span>
+                          </div>
+                        </td>
+                        <td className="py-3 text-right">
+                          <span className="font-medium">
+                            {userProfile.zodiac}
+                          </span>
+                        </td>
+                      </tr>
+                    )}
 
-              <Separator />
-
-              <div className="flex items-center space-x-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                  <Calendar className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium">{kingdomStats.currentDay}</p>
-                  <p className="text-sm text-muted-foreground">Current Day</p>
-                </div>
+                    {userProfile.specialty && (
+                      <tr className="border-b border-border">
+                        <td className="py-3 pr-4">
+                          <div className="flex items-center">
+                            <div className="bg-primary/10 p-2 rounded-full mr-3">
+                              <MapPin className="h-4 w-4 text-primary" />
+                            </div>
+                            <span className="text-sm font-medium">
+                              Specialty
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3 text-right">
+                          <span className="font-medium">
+                            {userProfile.specialty}
+                          </span>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </CardContent>
             <CardFooter>

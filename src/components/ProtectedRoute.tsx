@@ -60,6 +60,17 @@ export default function ProtectedRoute({
     return <Navigate to={redirectPath} replace />;
   }
 
+  // Check if user is on the login page and has already completed setup
+  if (
+    hasCompletedSetup() &&
+    (location.pathname === "/login" || location.pathname === "/register")
+  ) {
+    console.log(
+      "ProtectedRoute: Setup already completed, redirecting to dashboard",
+    );
+    return <Navigate to="/dashboard" replace />;
+  }
+
   // Only redirect to onboarding if user hasn't completed setup
   // and they're not already on the setup or onboarding pages
   // This prevents redirecting users who have already completed setup
