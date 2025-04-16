@@ -9,6 +9,7 @@ import {
   Users,
   Shield,
   LogOut,
+  Map,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "./ui/button";
@@ -51,7 +52,7 @@ const Navigation = () => {
       icon: <Users className="h-5 w-5" />,
     },
     { path: "/combat", label: "Combat", icon: <Shield className="h-5 w-5" /> },
-    { path: "/map", label: "World Map", icon: <Shield className="h-5 w-5" /> },
+    { path: "/map", label: "World Map", icon: <Map className="h-5 w-5" /> },
   ];
 
   return (

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import GameDashboard from "./game/GameDashboard";
 import CombatInterface from "./game/CombatInterface";
+import { Button } from "@/components/ui/button";
 
 const Home = () => {
   // Get auth context and navigation

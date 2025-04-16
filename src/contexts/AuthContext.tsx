@@ -68,7 +68,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             const { data: profileData, error: profileError } = await supabase
               .from("user_profiles")
-              .select("race, kingdom_name, zodiac, specialty")
+              .select(
+                "race, kingdom_name, kingdom_description, kingdom_motto, kingdom_capital, zodiac, specialty, setup_completed",
+              )
               .eq("user_id", currentUser.id)
               .single();
 
@@ -83,8 +85,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUserProfile({
                 race: profileData.race,
                 kingdomName: profileData.kingdom_name,
+                kingdomDescription: profileData.kingdom_description,
+                kingdomMotto: profileData.kingdom_motto,
+                kingdomCapital: profileData.kingdom_capital,
                 zodiac: profileData.zodiac,
                 specialty: profileData.specialty,
+                setupCompleted: profileData.setup_completed,
               });
               console.log("AuthContext: User profile loaded", !!profileData);
             } else {
@@ -124,7 +130,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
               const { data: profileData, error: profileError } = await supabase
                 .from("user_profiles")
-                .select("race, kingdom_name, zodiac, specialty")
+                .select(
+                  "race, kingdom_name, kingdom_description, kingdom_motto, kingdom_capital, zodiac, specialty, setup_completed",
+                )
                 .eq("user_id", currentUser.id)
                 .single();
 
@@ -139,8 +147,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUserProfile({
                   race: profileData.race,
                   kingdomName: profileData.kingdom_name,
+                  kingdomDescription: profileData.kingdom_description,
+                  kingdomMotto: profileData.kingdom_motto,
+                  kingdomCapital: profileData.kingdom_capital,
                   zodiac: profileData.zodiac,
                   specialty: profileData.specialty,
+                  setupCompleted: profileData.setup_completed,
                 });
               } else {
                 // If no profile data, still create an empty profile
@@ -215,8 +227,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             user_id: userId,
             race: null,
             kingdom_name: null,
+            kingdom_description: null,
+            kingdom_motto: null,
+            kingdom_capital: null,
             zodiac: null,
             specialty: null,
+            setup_completed: false,
             updated_at: new Date().toISOString(),
           });
 
@@ -337,11 +353,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Export the hook as a named export for Fast Refresh compatibility
-export const useAuth = () => {
+// Create a separate hook function outside the provider for Fast Refresh compatibility
+function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-};
+}
+
+// Export the hook
+export { useAuth };

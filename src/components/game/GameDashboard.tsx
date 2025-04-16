@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
+import { useNavigate } from "react-router-dom";
 import {
   Shield,
   Building,
@@ -11,6 +12,8 @@ import {
   ChevronRight,
   Crown,
   MapPin,
+  Map,
+  Bell,
 } from "lucide-react";
 import {
   Card,
@@ -31,6 +34,8 @@ import OnlineUsers from "./OnlineUsers";
 const GameDashboard = () => {
   const { userProfile } = useAuth();
   const { onlineUsers } = useMultiplayer();
+  const navigate = useNavigate();
+  const [showAllNotifications, setShowAllNotifications] = useState(false);
 
   // Get race details based on selected race ID
   const getRaceDetails = () => {
@@ -207,6 +212,15 @@ const GameDashboard = () => {
                     <Users className="mr-2 h-4 w-4" />
                     {onlineUsers.length} Online
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shadow-neuro-flat bg-white/50"
+                    onClick={() => navigate("/map")}
+                  >
+                    <Map className="mr-2 h-4 w-4" />
+                    World Map
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -310,16 +324,27 @@ const GameDashboard = () => {
 
           <motion.div variants={itemVariants} className="lg:col-span-1">
             <Card className="bg-neuro-bg shadow-neuro-flat hover:shadow-neuro-convex transition-all duration-300 neuro-glow">
-              <CardHeader>
-                <CardTitle>Notifications</CardTitle>
-                <CardDescription>Recent kingdom activities</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="h-4 w-4" />
+                    Notifications
+                  </CardTitle>
+                  <CardDescription>Recent kingdom activities</CardDescription>
+                </div>
+                <Badge variant="outline" className="bg-primary/10">
+                  {notifications.length} New
+                </Badge>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {notifications.map((notification) => (
+                  {(showAllNotifications
+                    ? notifications
+                    : notifications.slice(0, 3)
+                  ).map((notification) => (
                     <div
                       key={notification.id}
-                      className="flex items-start space-x-3"
+                      className="flex items-start space-x-3 p-2 rounded-md hover:bg-accent/10 transition-colors cursor-pointer"
                     >
                       {notification.type === "building" && (
                         <Building className="h-5 w-5 text-blue-500" />
@@ -343,8 +368,13 @@ const GameDashboard = () => {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button variant="ghost" size="sm" className="w-full">
-                  View all activities
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setShowAllNotifications(!showAllNotifications)}
+                >
+                  {showAllNotifications ? "Show Less" : "View All Activities"}
                   <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </CardFooter>

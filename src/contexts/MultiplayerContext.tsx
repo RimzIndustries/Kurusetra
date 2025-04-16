@@ -72,7 +72,7 @@ export function MultiplayerProvider({
 
     console.log("MultiplayerContext: Initializing presence channel");
 
-    // Create a presence channel for online users
+    // Create a presence channel for online users with optimized configuration
     const channel = supabase.channel("online-users", {
       config: {
         presence: {
@@ -81,6 +81,10 @@ export function MultiplayerProvider({
         broadcast: {
           self: true,
         },
+        // Add retryIntervalMs for better reconnection handling
+        retryIntervalMs: 5000,
+        // Add timeout for better performance
+        timeoutMs: 10000,
       },
     });
 
@@ -115,8 +119,10 @@ export function MultiplayerProvider({
         console.log("User left:", leftPresences[0]?.username);
       });
 
-    // Subscribe to the messages channel
+    // Subscribe to the messages channel with optimized message handling
     channel.on("broadcast", { event: "message" }, ({ payload }) => {
+      // Only process if the message is relevant to this user
+      // This reduces unnecessary state updates
       if (payload.receiverId === user.id || payload.senderId === user.id) {
         setMessages((prev) => [
           ...prev,
@@ -329,11 +335,14 @@ export function MultiplayerProvider({
   );
 }
 
-// Export the hook as a named export for Fast Refresh compatibility
-export const useMultiplayer = () => {
+// Create a separate hook function outside the provider for Fast Refresh compatibility
+function useMultiplayer() {
   const context = useContext(MultiplayerContext);
   if (context === undefined) {
     throw new Error("useMultiplayer must be used within a MultiplayerProvider");
   }
   return context;
-};
+}
+
+// Export the hook
+export { useMultiplayer };

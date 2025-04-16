@@ -91,6 +91,8 @@ export class GameStateManager {
 
   // Load a kingdom's game state
   async loadGameState(kingdomId: string): Promise<GameState | null> {
+    console.log(`Loading game state for kingdom: ${kingdomId}`);
+    const startTime = Date.now();
     // Check if we already have it in memory
     if (this.gameStates.has(kingdomId)) {
       return this.gameStates.get(kingdomId) || null;
@@ -231,6 +233,13 @@ export class GameStateManager {
 
       // Cache the state
       this.gameStates.set(kingdomId, gameState);
+
+      // Log performance metrics
+      const endTime = Date.now();
+      console.log(
+        `Game state loaded in ${endTime - startTime}ms for kingdom: ${kingdomId}`,
+      );
+
       return gameState;
     } catch (error) {
       console.error("Error in loadGameState:", error);
@@ -240,6 +249,8 @@ export class GameStateManager {
 
   // Save a kingdom's game state
   async saveGameState(kingdomId: string): Promise<boolean> {
+    console.log(`Saving game state for kingdom: ${kingdomId}`);
+    const startTime = Date.now();
     const gameState = this.gameStates.get(kingdomId);
     if (!gameState) return false;
 
@@ -339,6 +350,13 @@ export class GameStateManager {
       // Update last updated timestamp
       gameState.lastUpdated = Date.now();
       this.dirtyStates.delete(kingdomId);
+
+      // Log performance metrics
+      const endTime = Date.now();
+      console.log(
+        `Game state saved in ${endTime - startTime}ms for kingdom: ${kingdomId}`,
+      );
+
       return true;
     } catch (error) {
       console.error("Error in saveGameState:", error);

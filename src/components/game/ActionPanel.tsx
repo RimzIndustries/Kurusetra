@@ -8,7 +8,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Building, Sword, Coins, Users, Shield, Castle } from "lucide-react";
+import {
+  Building,
+  Sword,
+  Coins,
+  Users,
+  Shield,
+  Castle,
+  Map,
+} from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 
@@ -68,6 +76,14 @@ const ActionPanel = ({ onActionSelect }: ActionPanelProps) => {
       icon: <Castle className="h-6 w-6 text-indigo-500" />,
       iconBg: "bg-indigo-500/10",
       path: "/kingdom",
+    },
+    {
+      id: "map",
+      name: "World Map",
+      description: "Explore territories and scout enemy kingdoms",
+      icon: <Map className="h-6 w-6 text-teal-500" />,
+      iconBg: "bg-teal-500/10",
+      path: "/map",
     },
   ];
 

@@ -484,9 +484,9 @@ const KingdomSetup = ({
                   <Button
                     variant="outline"
                     className="bg-white/90 hover:bg-white border-green-200 text-green-800 hover:text-green-900 shadow-neuro-flat"
-                    onClick={() => navigate("/dashboard", { replace: true })}
+                    onClick={() => navigate("/", { replace: true })}
                   >
-                    Go to Dashboard
+                    Enter Your Kingdom
                   </Button>
                 </motion.div>
 
@@ -1421,7 +1421,7 @@ const KingdomSetup = ({
                                 } else {
                                   console.log("Redirecting to dashboard");
                                   // Using replace: true prevents the user from going back to the setup page
-                                  navigate("/dashboard", { replace: true });
+                                  navigate("/", { replace: true });
                                 }
                               }, 500);
                             } catch (err: any) {
