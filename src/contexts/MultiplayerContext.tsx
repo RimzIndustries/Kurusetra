@@ -336,13 +336,10 @@ export function MultiplayerProvider({
 }
 
 // Create a separate hook function outside the provider for Fast Refresh compatibility
-function useMultiplayer() {
+export function useMultiplayer() {
   const context = useContext(MultiplayerContext);
   if (context === undefined) {
     throw new Error("useMultiplayer must be used within a MultiplayerProvider");
   }
   return context;
 }
-
-// Export the hook
-export { useMultiplayer };

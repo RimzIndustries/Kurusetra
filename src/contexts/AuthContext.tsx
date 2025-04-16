@@ -38,10 +38,8 @@ type AuthContextType = {
   checkSupabaseConnection: () => Promise<boolean>;
 };
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL as string,
-  import.meta.env.VITE_SUPABASE_ANON_KEY as string,
-);
+// Import the centralized supabase client
+import { supabase, optimizedQuery } from "../utils/supabaseClient";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -183,33 +181,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    try {
-      console.log("AuthContext: Attempting to sign in with email", email);
-      const response = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (response.error) {
-        console.error("AuthContext: Sign in error", response.error);
-      } else {
-        console.log("AuthContext: Sign in successful");
-      }
-
-      return {
-        data: response.data,
-        error: response.error,
-      };
-    } catch (error) {
-      console.error("AuthContext: Unexpected error during sign in", error);
-      return {
-        data: null,
-        error:
-          error instanceof Error
-            ? error
-            : new Error("An unexpected error occurred during sign in"),
-      };
-    }
+    return optimizedQuery(
+      () => supabase.auth.signInWithPassword({ email, password }),
+      "signIn",
+    );
   };
 
   const signUp = async (email: string, password: string) => {
@@ -316,24 +291,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const checkSupabaseConnection = async (): Promise<boolean> => {
-    try {
-      console.log("Testing Supabase connection...");
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .select("count(*)")
-        .limit(1);
-
-      if (error) {
-        console.error("Supabase connection test failed:", error);
-        return false;
-      }
-
-      console.log("Supabase connection test successful:", data);
-      return true;
-    } catch (error) {
-      console.error("Unexpected error during Supabase connection test:", error);
-      return false;
-    }
+    const { data, error } = await optimizedQuery(
+      () => supabase.from("user_profiles").select("count(*)").limit(1),
+      "checkSupabaseConnection",
+    );
+    return !error && data !== null;
   };
 
   const value = {
@@ -354,13 +316,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 // Create a separate hook function outside the provider for Fast Refresh compatibility
-function useAuth() {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
-
-// Export the hook
-export { useAuth };
