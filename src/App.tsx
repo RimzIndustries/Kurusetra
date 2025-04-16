@@ -13,7 +13,6 @@ import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import KingdomSetup from "./components/game/KingdomSetup";
 import UserProfile from "./components/UserProfile";
-import UserOnboarding from "./components/game/UserOnboarding";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import { MultiplayerProvider } from "./contexts/MultiplayerContext";
@@ -39,7 +38,6 @@ function AppRoutes() {
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
                 {/* Setup routes - outside of main layout */}
-                <Route path="/onboarding" element={<UserOnboarding />} />
                 <Route path="/setup-kingdom" element={<KingdomSetup />} />
 
                 {/* Main app routes - only accessible after setup */}

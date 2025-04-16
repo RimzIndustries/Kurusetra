@@ -1402,6 +1402,7 @@ const KingdomSetup = ({
                                   // Just show success state in storyboard
                                 } else {
                                   console.log("Redirecting to dashboard");
+                                  // Using replace: true prevents the user from going back to the setup page
                                   navigate("/dashboard", { replace: true });
                                 }
                               }, 500);

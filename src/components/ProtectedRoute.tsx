@@ -63,15 +63,11 @@ export default function ProtectedRoute({
   // Only redirect to onboarding if user hasn't completed setup
   // and they're not already on the setup or onboarding pages
   // This prevents redirecting users who have already completed setup
-  if (
-    !hasCompletedSetup() &&
-    location.pathname !== "/setup-kingdom" &&
-    location.pathname !== "/onboarding"
-  ) {
+  if (!hasCompletedSetup() && location.pathname !== "/setup-kingdom") {
     console.log(
-      "ProtectedRoute: Setup not completed, redirecting to onboarding",
+      "ProtectedRoute: Setup not completed, redirecting to setup-kingdom",
     );
-    return <Navigate to="/onboarding" replace state={{ from: location }} />;
+    return <Navigate to="/setup-kingdom" replace state={{ from: location }} />;
   }
 
   console.log("ProtectedRoute: All checks passed, rendering outlet");
