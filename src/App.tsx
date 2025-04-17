@@ -36,8 +36,7 @@ function AppRoutes() {
 
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
-                {/* Setup routes - outside of main layout */}
-                {/* Kingdom setup is now integrated into the registration process */}
+                {/* All setup is now integrated into the registration process */}
 
                 {/* Main app routes - only accessible after setup */}
                 <Route element={<Layout />}>

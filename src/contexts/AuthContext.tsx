@@ -2,13 +2,13 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 
 type UserProfile = {
-  race?: string;
-  kingdomName?: string;
-  kingdomDescription?: string;
-  kingdomMotto?: string;
-  kingdomCapital?: string;
-  zodiac?: string;
-  specialty?: string;
+  race?: string | null;
+  kingdomName?: string | null;
+  kingdomDescription?: string | null;
+  kingdomMotto?: string | null;
+  kingdomCapital?: string | null;
+  zodiac?: string | null;
+  specialty?: string | null;
   setupCompleted?: boolean;
 };
 
@@ -195,7 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const userId = response.data.user.id;
 
-        // Create default user profile
+        // Create default user profile with all required fields
         const { error: profileError } = await supabase
           .from("user_profiles")
           .insert({
@@ -280,7 +280,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         specialty: profile.specialty || userProfile.specialty,
         updated_at: new Date().toISOString(),
         setup_completed:
-          profile.setupCompleted !== undefined ? profile.setupCompleted : true,
+          profile.setupCompleted !== undefined
+            ? profile.setupCompleted
+            : userProfile.setupCompleted || false,
       };
 
       console.log("Saving profile data to Supabase:", profileData);
@@ -342,11 +344,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Create a separate hook function outside the provider for Fast Refresh compatibility
-export function useAuth() {
+// Export the hook as a named export for Fast Refresh compatibility
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
+};

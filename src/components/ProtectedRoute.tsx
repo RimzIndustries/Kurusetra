@@ -68,12 +68,11 @@ export default function ProtectedRoute({
     console.log(
       "ProtectedRoute: Setup already completed, redirecting to dashboard",
     );
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
 
-  // Since registration and kingdom setup are now combined,
-  // we don't need to redirect to a separate setup-kingdom page
-  // Instead, we check if the user is already on the register page
+  // Registration and kingdom setup are combined in a single flow
+  // Redirect to register page if the user hasn't completed setup
   if (!hasCompletedSetup() && location.pathname !== "/register") {
     console.log(
       "ProtectedRoute: Setup not completed, redirecting to register page",
