@@ -139,7 +139,7 @@ export default function LandingPage() {
           <div className="mt-8 flex flex-wrap gap-4 justify-center">
             <Button
               size="lg"
-              className="shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200"
+              className="shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200 bg-primary hover:bg-primary/90"
               onClick={() => navigate("/register")}
             >
               Create Your Kingdom
@@ -147,7 +147,7 @@ export default function LandingPage() {
             <Button
               variant="outline"
               size="lg"
-              className="shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200"
+              className="shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200 border-2"
               onClick={() => navigate("/login")}
             >
               Login to Your Kingdom
