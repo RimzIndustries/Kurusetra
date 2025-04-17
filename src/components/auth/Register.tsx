@@ -307,9 +307,9 @@ export default function Register() {
               console.log("Kingdom setup complete, profile updated:", result);
               // Navigate after showing success animation
               setTimeout(() => {
-                console.log("Redirecting to dashboard after successful setup");
+                console.log("Redirecting to login after successful setup");
                 // Using replace: true prevents the user from going back to the setup page
-                navigate("/profile", { replace: true });
+                navigate("/login", { replace: true });
               }, 500);
             } catch (err: any) {
               console.error("Error saving kingdom information:", err);
