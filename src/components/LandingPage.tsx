@@ -7,8 +7,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "./ui/card";
 import { Button } from "./ui/button";
+import { Progress } from "./ui/progress";
 import {
   Crown,
   Wand,
@@ -21,7 +23,15 @@ import {
   Sparkles,
   Sun,
   Moon,
+  Heart,
+  Trophy,
+  Zap,
 } from "lucide-react";
+import {
+  getAllZodiacPredictions,
+  ZodiacSign,
+  ZodiacPrediction,
+} from "../utils/zodiac";
 
 export default function LandingPage() {
   const { user, userProfile } = useAuth();
@@ -246,22 +256,88 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Zodiac Section Placeholder - Will be implemented in next phase */}
+        {/* Zodiac Predictions Section */}
         <section className="mb-16">
           <h2 className="text-3xl font-bold mb-6 text-center">
             <span className="flex items-center justify-center gap-2">
               <Sparkles className="h-6 w-6" />
-              <span>Zodiac Signs</span>
+              <span>Daily Zodiac Predictions</span>
             </span>
           </h2>
           <p className="text-center text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Your zodiac sign provides special bonuses to your kingdom. Choose
-            wisely to complement your race's natural abilities.
+            Check your daily zodiac prediction for luck, love, and game victory
+            chances. Choose wisely to complement your race's natural abilities.
           </p>
 
-          {/* Zodiac cards will be added in the next implementation */}
-          <div className="text-center p-8 bg-accent/20 rounded-xl shadow-neuro-flat">
-            <p>Zodiac sign information coming soon...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Object.entries(getAllZodiacPredictions()).map(([key, zodiac]) => (
+              <Card
+                key={key}
+                className={`shadow-neuro-flat hover:shadow-neuro-convex transition-all duration-300 border-2 bg-${zodiac.element.toLowerCase()}-100 border-${zodiac.element.toLowerCase()}-300 card-hover-effect`}
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`p-2 rounded-md bg-${zodiac.element.toLowerCase()}-100`}
+                    >
+                      {zodiac.element === "Fire" && (
+                        <Zap className="h-6 w-6 text-amber-600" />
+                      )}
+                      {zodiac.element === "Earth" && (
+                        <Mountain className="h-6 w-6 text-emerald-600" />
+                      )}
+                      {zodiac.element === "Air" && (
+                        <Bird className="h-6 w-6 text-sky-600" />
+                      )}
+                      {zodiac.element === "Water" && (
+                        <Sparkles className="h-6 w-6 text-blue-600" />
+                      )}
+                    </div>
+                    <CardTitle
+                      className={`text-${zodiac.element.toLowerCase() === "fire" ? "amber" : zodiac.element.toLowerCase() === "earth" ? "emerald" : zodiac.element.toLowerCase() === "air" ? "sky" : "blue"}-800`}
+                    >
+                      {zodiac.name}
+                    </CardTitle>
+                  </div>
+                  <CardDescription>{zodiac.period}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-4 w-4" />
+                        <span className="font-semibold">Luck:</span>
+                      </div>
+                      <p className="text-sm">{zodiac.luck}</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Heart className="h-4 w-4" />
+                        <span className="font-semibold">Love:</span>
+                      </div>
+                      <p className="text-sm">{zodiac.love}</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Trophy className="h-4 w-4" />
+                        <span className="font-semibold">Victory Chance:</span>
+                      </div>
+                      <div className="space-y-1">
+                        <Progress value={zodiac.winChance} className="h-2" />
+                        <p className="text-xs text-right">
+                          {zodiac.winChance}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="pt-0">
+                  <p className="text-sm italic">"{zodiac.dailyMessage}"</p>
+                </CardFooter>
+              </Card>
+            ))}
           </div>
         </section>
       </div>
