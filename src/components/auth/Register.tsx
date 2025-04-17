@@ -1316,11 +1316,11 @@ export default function Register() {
                     {loading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Creating Kingdom...
+                        Creating Account...
                       </>
                     ) : (
                       <>
-                        Begin Your Journey <ChevronRight className="h-4 w-4" />
+                        Create Account <ChevronRight className="h-4 w-4" />
                       </>
                     )}
                   </Button>
