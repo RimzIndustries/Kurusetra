@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Alert, AlertDescription } from "../ui/alert";
-import RaceSelection from "../game/RaceSelection";
+import RaceSelectionDropdown from "../game/RaceSelectionDropdown";
 import { Progress } from "../ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import { Textarea } from "../ui/textarea";
@@ -720,10 +720,10 @@ export default function Register() {
                       Select the race that will define your kingdom's strengths
                       and culture
                     </p>
-                    <div className="bg-accent/20 rounded-lg p-2 shadow-neuro-flat">
-                      <RaceSelection
+                    <div className="bg-accent/20 rounded-lg p-4 shadow-neuro-flat">
+                      <RaceSelectionDropdown
                         onSelectRace={handleRaceSelection}
-                        isOpen={true}
+                        selectedRace={selectedRace}
                       />
                     </div>
 

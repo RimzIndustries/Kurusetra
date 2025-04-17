@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -19,11 +19,39 @@ import {
   Sword,
   Ghost,
   Sparkles,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 export default function LandingPage() {
   const { user, userProfile } = useAuth();
   const navigate = useNavigate();
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Check if user has a preference stored in localStorage
+    const savedTheme = localStorage.getItem("theme");
+    // Check if system prefers dark mode
+    const systemPrefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+
+    // If theme is explicitly set in localStorage, use that
+    if (savedTheme) {
+      return savedTheme === "dark";
+    }
+    // Otherwise use system preference
+    return systemPrefersDark;
+  });
+
+  // Apply dark mode class to document
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDarkMode]);
 
   // Redirect to dashboard if user is logged in and has completed setup
   useEffect(() => {
@@ -127,6 +155,22 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-neuro-bg p-6 flex flex-col items-center">
       <div className="max-w-6xl w-full mx-auto">
+        {/* Dark Mode Toggle */}
+        <div className="absolute top-4 right-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="rounded-full w-10 h-10 shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200"
+            aria-label="Toggle dark mode"
+          >
+            {isDarkMode ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
         {/* Hero Section */}
         <div className="text-center mb-12 mt-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 header-gradient">
