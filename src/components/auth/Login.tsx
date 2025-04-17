@@ -91,13 +91,13 @@ export default function Login() {
 
       // Short delay for success animation
       setTimeout(() => {
-        // Redirect new users to onboarding, existing users to dashboard
+        // Redirect new users to onboarding, existing users to profile
         if (isNewUser()) {
           console.log("Redirecting new user to onboarding");
           navigate("/onboarding");
         } else {
-          console.log("Redirecting existing user to dashboard");
-          navigate("/");
+          console.log("Redirecting existing user to profile");
+          navigate("/profile");
         }
       }, 1000);
     } catch (err: any) {
