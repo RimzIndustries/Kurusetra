@@ -705,29 +705,72 @@ export default function Register() {
                   exit="exit"
                   variants={pageVariants}
                   transition={{ duration: 0.3 }}
-                  className="space-y-4"
+                  className="space-y-6"
                 >
-                  <div className="space-y-4">
+                  {/* Race Selection Section with improved styling */}
+                  <div className="space-y-3">
                     <Label
                       htmlFor="race"
-                      className="flex items-center gap-2 text-base font-medium"
+                      className="flex items-center gap-2 text-base font-semibold"
                     >
+                      <Crown className="h-5 w-5" />
                       Choose Your Race
                     </Label>
-                    <RaceSelection
-                      onSelectRace={handleRaceSelection}
-                      isOpen={true}
-                    />
+                    <p className="text-sm text-muted-foreground">
+                      Select the race that will define your kingdom's strengths
+                      and culture
+                    </p>
+                    <div className="bg-accent/20 rounded-lg p-2 shadow-neuro-flat">
+                      <RaceSelection
+                        onSelectRace={handleRaceSelection}
+                        isOpen={true}
+                      />
+                    </div>
+
+                    {/* Race details card - only shown when a race is selected */}
+                    {selectedRace && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className={`mt-2 p-3 rounded-lg ${raceDetails.color} border border-${raceDetails.color.split("-")[1]}-300 shadow-neuro-flat`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <div
+                            className={`p-1.5 rounded-md bg-${raceDetails.color.split("-")[1]}-200`}
+                          >
+                            {raceDetails.icon}
+                          </div>
+                          <h4
+                            className={`font-medium ${raceDetails.textColor}`}
+                          >
+                            {raceDetails.name}
+                          </h4>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Specialty: {raceDetails.specialty}
+                        </p>
+                        <p className="text-xs font-medium">
+                          {raceDetails.startingBonus}
+                        </p>
+                      </motion.div>
+                    )}
                   </div>
 
-                  <div className="space-y-2 mt-6">
+                  {/* Kingdom Name Section with improved styling */}
+                  <div className="space-y-3 mt-2">
                     <Label
                       htmlFor="kingdomName"
-                      className="flex items-center gap-2 text-base font-medium"
+                      className="flex items-center gap-2 text-base font-semibold"
                     >
-                      <Crown className="h-4 w-4" />
+                      <Landmark className="h-5 w-5" />
                       Kingdom Name
                     </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Choose a name that reflects the glory of your{" "}
+                      {selectedRace ? raceDetails.name : "kingdom's"}{" "}
+                      civilization
+                    </p>
                     <div className="relative">
                       <Input
                         id="kingdomName"
@@ -738,7 +781,7 @@ export default function Register() {
                         onBlur={() => setFocusedField(null)}
                         required
                         maxLength={30}
-                        className={`border-2 focus:border-2 focus:ring-0 focus:ring-offset-0 ${fieldErrors.kingdomName ? "border-red-300 shadow-neuro-concave-error" : focusedField === "kingdomName" ? `border-${selectedRace ? raceDetails.buttonColor.split("-")[1] : "primary"}-400 shadow-neuro-concave-focus` : "shadow-neuro-concave"} h-11 px-4 transition-all duration-200`}
+                        className={`border-2 focus:border-2 focus:ring-0 focus:ring-offset-0 ${fieldErrors.kingdomName ? "border-red-300 shadow-neuro-concave-error" : focusedField === "kingdomName" ? `border-${selectedRace ? raceDetails.buttonColor.split("-")[1] : "primary"}-400 shadow-neuro-concave-focus` : "shadow-neuro-concave"} h-12 px-4 transition-all duration-200 text-base`}
                       />
 
                       {/* Validation icon */}
@@ -786,13 +829,8 @@ export default function Register() {
                       )}
                     </AnimatePresence>
 
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Choose a name that reflects the glory of your{" "}
-                      {selectedRace ? raceDetails.name : ""} civilization
-                    </p>
-
                     {/* Character count */}
-                    <div className="flex justify-end mt-1">
+                    <div className="flex justify-end">
                       <span
                         className={`text-xs ${kingdomName.length > 25 ? "text-amber-500" : "text-muted-foreground"}`}
                       >
