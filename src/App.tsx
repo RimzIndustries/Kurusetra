@@ -13,6 +13,7 @@ import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import UserProfile from "./components/UserProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
+import LandingPage from "./components/LandingPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { MultiplayerProvider } from "./contexts/MultiplayerContext";
 import routes from "tempo-routes";
@@ -31,6 +32,7 @@ function AppRoutes() {
           <>
             <Routes>
               {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
 
@@ -41,7 +43,6 @@ function AppRoutes() {
                 {/* Main app routes - only accessible after setup */}
                 <Route element={<Layout />}>
                   {/* Dashboard routes */}
-                  <Route path="/" element={<Home />} />
                   <Route path="/dashboard" element={<Home />} />
                   <Route path="/home" element={<Home />} />
 
