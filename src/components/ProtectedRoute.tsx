@@ -60,7 +60,7 @@ export default function ProtectedRoute({
     return <Navigate to={redirectPath} replace />;
   }
 
-  // Check if user is on the login page and has already completed setup
+  // Check if user is on the login or register page and has already completed setup
   if (
     hasCompletedSetup() &&
     (location.pathname === "/login" || location.pathname === "/register")
@@ -71,13 +71,14 @@ export default function ProtectedRoute({
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Redirect to setup-kingdom if user hasn't completed setup
-  // Only redirect if not already on the setup path
-  if (!hasCompletedSetup() && location.pathname !== "/setup-kingdom") {
+  // Since registration and kingdom setup are now combined,
+  // we don't need to redirect to a separate setup-kingdom page
+  // Instead, we check if the user is already on the register page
+  if (!hasCompletedSetup() && location.pathname !== "/register") {
     console.log(
-      "ProtectedRoute: Setup not completed, redirecting to setup-kingdom",
+      "ProtectedRoute: Setup not completed, redirecting to register page",
     );
-    return <Navigate to="/setup-kingdom" replace state={{ from: location }} />;
+    return <Navigate to="/register" replace state={{ from: location }} />;
   }
 
   console.log("ProtectedRoute: All checks passed, rendering outlet");

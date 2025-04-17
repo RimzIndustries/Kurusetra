@@ -232,7 +232,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Clear any local storage or cookies that might be persisting the session
       localStorage.removeItem("supabase.auth.token");
       localStorage.removeItem(
-        "sb-" + supabaseUrl.split("//")[1].split(".")[0] + "-auth-token",
+        "sb-" +
+          import.meta.env.VITE_SUPABASE_URL.split("//")[1].split(".")[0] +
+          "-auth-token",
       );
 
       // Sign out from Supabase with more options

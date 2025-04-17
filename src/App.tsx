@@ -11,7 +11,6 @@ import GameMap from "./components/game/GameMap";
 import Layout from "./components/Layout";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
-import KingdomSetup from "./components/game/KingdomSetup";
 import UserProfile from "./components/UserProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -38,7 +37,7 @@ function AppRoutes() {
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
                 {/* Setup routes - outside of main layout */}
-                <Route path="/setup-kingdom" element={<KingdomSetup />} />
+                {/* Kingdom setup is now integrated into the registration process */}
 
                 {/* Main app routes - only accessible after setup */}
                 <Route element={<Layout />}>
