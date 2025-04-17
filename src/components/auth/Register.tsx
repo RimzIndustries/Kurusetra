@@ -337,12 +337,16 @@ export default function Register() {
     if (validateKingdomFields()) {
       setStep(step + 1);
       setSetupProgress(step === 1 ? 50 : step === 2 ? 75 : 100);
+      // Scroll to top for better UX
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   const prevStep = () => {
     setStep(step - 1);
     setSetupProgress(step === 2 ? 25 : step === 3 ? 50 : 75);
+    // Scroll to top for better UX
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Handle race selection
@@ -412,6 +416,8 @@ export default function Register() {
     }
     setStep(5); // Move to account creation step
     setSetupProgress(100);
+    // Scroll to top for better UX
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Function to get step title with icon
@@ -536,7 +542,8 @@ export default function Register() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.7 }}
                 >
-                  Your journey in the Kurusetra universe begins now.
+                  Your journey in the Kurusetra universe begins now. Welcome,
+                  ruler of {kingdomName}!
                 </motion.p>
 
                 <motion.div
@@ -547,10 +554,10 @@ export default function Register() {
                 >
                   <Button
                     variant="outline"
-                    className="bg-white/90 hover:bg-white border-green-200 text-green-800 hover:text-green-900 shadow-neuro-flat"
+                    className="bg-white/90 hover:bg-white border-green-200 text-green-800 hover:text-green-900 shadow-neuro-flat font-medium"
                     onClick={() => navigate("/profile", { replace: true })}
                   >
-                    View Your Profile
+                    Enter Your Kingdom
                   </Button>
                 </motion.div>
 
@@ -661,14 +668,14 @@ export default function Register() {
                       transition={{ duration: 0.3 }}
                     >
                       {stepNumber === 1
-                        ? "Account"
+                        ? "Race"
                         : stepNumber === 2
-                          ? "Race"
+                          ? "Story"
                           : stepNumber === 3
-                            ? "Story"
+                            ? "Details"
                             : stepNumber === 4
-                              ? "Details"
-                              : "Review"}
+                              ? "Review"
+                              : "Account"}
                     </motion.span>
                   </motion.div>
                 ))}
@@ -1248,16 +1255,16 @@ export default function Register() {
                     </div>
                     <Button
                       type="submit"
-                      className="w-full shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200 active:scale-95"
+                      className={`w-full shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200 active:scale-95 ${selectedRace ? raceDetails.buttonColor : ""}`}
                       disabled={loading}
                     >
                       {loading ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Creating account...
+                          Creating your kingdom...
                         </>
                       ) : (
-                        "Create account"
+                        "Create Your Kingdom"
                       )}
                     </Button>
                   </form>
@@ -1270,7 +1277,10 @@ export default function Register() {
               <div className="w-full flex justify-between items-center">
                 <p className="text-sm text-muted-foreground">
                   Already have an account?{" "}
-                  <Link to="/login" className="text-primary hover:underline">
+                  <Link
+                    to="/login"
+                    className={`${selectedRace ? raceDetails.textColor : "text-primary"} hover:underline font-medium`}
+                  >
                     Login
                   </Link>
                 </p>
@@ -1312,7 +1322,7 @@ export default function Register() {
                       </>
                     ) : (
                       <>
-                        Continue to Account Creation{" "}
+                        Finalize Kingdom Setup{" "}
                         <ChevronRight className="h-4 w-4" />
                       </>
                     )}
