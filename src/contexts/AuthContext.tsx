@@ -43,7 +43,9 @@ import { supabase, optimizedQuery } from "../utils/supabaseClient";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile>({});
   const [loading, setLoading] = useState(true);
@@ -342,7 +344,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
+};
 
 // Export the hook as a named export for Fast Refresh compatibility
 export const useAuth = () => {
