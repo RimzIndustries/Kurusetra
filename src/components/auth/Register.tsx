@@ -283,12 +283,42 @@ export default function Register() {
       const { error, data } = await signUp(email, password);
       if (error) throw error;
 
-      // Set registration as complete and move to kingdom setup
+      // Set registration as complete and handle kingdom setup completion
       if (data?.user?.id) {
         setUserId(data.user.id);
         setRegistrationComplete(true);
-        setStep(2); // Move to kingdom setup step
-        setSetupProgress(50);
+        // Show success animation before navigating
+        setTimeout(() => {
+          setShowSuccess(true);
+          setTimeout(async () => {
+            try {
+              console.log("Saving kingdom setup data to user profile");
+              const result = await updateUserProfile({
+                race: selectedRace,
+                kingdomName: kingdomName.trim(),
+                kingdomDescription: kingdomDescription.trim(),
+                kingdomMotto: kingdomMotto.trim(),
+                kingdomCapital: kingdomCapital.trim(),
+                specialty: raceDetails.specialty,
+                zodiac: selectedZodiac,
+                setupCompleted: true,
+              });
+
+              console.log("Kingdom setup complete, profile updated:", result);
+              // Navigate after showing success animation
+              setTimeout(() => {
+                console.log("Redirecting to dashboard after successful setup");
+                // Using replace: true prevents the user from going back to the setup page
+                navigate("/profile", { replace: true });
+              }, 500);
+            } catch (err: any) {
+              console.error("Error saving kingdom information:", err);
+              setShowSuccess(false);
+              setError(err.message || "Failed to save kingdom information");
+              setLoading(false);
+            }
+          }, 1500);
+        }, 300);
       } else {
         // If no user ID is returned, redirect to login
         alert(
@@ -306,13 +336,13 @@ export default function Register() {
   const nextStep = () => {
     if (validateKingdomFields()) {
       setStep(step + 1);
-      setSetupProgress(step === 2 ? 75 : 100);
+      setSetupProgress(step === 1 ? 50 : step === 2 ? 75 : 100);
     }
   };
 
   const prevStep = () => {
     setStep(step - 1);
-    setSetupProgress(step === 3 ? 50 : 75);
+    setSetupProgress(step === 2 ? 25 : step === 3 ? 50 : 75);
   };
 
   // Handle race selection
@@ -327,7 +357,7 @@ export default function Register() {
     let isValid = true;
     setError(null);
 
-    if (step === 2) {
+    if (step === 1) {
       if (!kingdomName.trim()) {
         errors.kingdomName = "Kingdom name is required";
         setError("Please enter a kingdom name");
@@ -342,7 +372,7 @@ export default function Register() {
         setError("Please select a race first");
         isValid = false;
       }
-    } else if (step === 3) {
+    } else if (step === 2) {
       if (
         kingdomDescription.trim().length > 0 &&
         kingdomDescription.trim().length < 10
@@ -354,7 +384,7 @@ export default function Register() {
         );
         isValid = false;
       }
-    } else if (step === 4) {
+    } else if (step === 3) {
       if (
         kingdomCapital.trim().length > 0 &&
         kingdomCapital.trim().length < 3
@@ -375,86 +405,48 @@ export default function Register() {
     return isValid;
   };
 
-  // Handle kingdom setup submission
-  const handleKingdomSetup = async () => {
+  // Move to account creation step
+  const moveToAccountCreation = () => {
     if (!validateKingdomFields()) {
       return;
     }
-
-    setLoading(true);
-
-    try {
-      // Show success animation before navigating
-      setTimeout(() => {
-        setShowSuccess(true);
-        setTimeout(async () => {
-          try {
-            console.log("Saving kingdom setup data to user profile");
-            const result = await updateUserProfile({
-              race: selectedRace,
-              kingdomName: kingdomName.trim(),
-              kingdomDescription: kingdomDescription.trim(),
-              kingdomMotto: kingdomMotto.trim(),
-              kingdomCapital: kingdomCapital.trim(),
-              specialty: raceDetails.specialty,
-              zodiac: selectedZodiac,
-              setupCompleted: true,
-            });
-
-            console.log("Kingdom setup complete, profile updated:", result);
-            // Navigate after showing success animation
-            setTimeout(() => {
-              console.log("Redirecting to dashboard after successful setup");
-              // Using replace: true prevents the user from going back to the setup page
-              navigate("/profile", { replace: true });
-            }, 500);
-          } catch (err: any) {
-            console.error("Error saving kingdom information:", err);
-            setShowSuccess(false);
-            setError(err.message || "Failed to save kingdom information");
-            setLoading(false);
-          }
-        }, 1500);
-      }, 300);
-    } catch (err: any) {
-      setError(err.message || "Failed to set up kingdom");
-      setLoading(false);
-    }
+    setStep(5); // Move to account creation step
+    setSetupProgress(100);
   };
 
   // Function to get step title with icon
   const getStepTitle = () => {
     switch (step) {
       case 1:
-        return "Create Account";
-      case 2:
         return (
           <>
             <Crown className="h-5 w-5 mr-2" />
             <span>Choose Race & Name</span>
           </>
         );
-      case 3:
+      case 2:
         return (
           <>
             <Landmark className="h-5 w-5 mr-2" />
             <span>Describe Your Kingdom</span>
           </>
         );
-      case 4:
+      case 3:
         return (
           <>
             <Flag className="h-5 w-5 mr-2" />
             <span>Capital & Zodiac</span>
           </>
         );
-      case 5:
+      case 4:
         return (
           <>
             <Check className="h-5 w-5 mr-2" />
             <span>Review & Confirm</span>
           </>
         );
+      case 5:
+        return "Create Account";
       default:
         return "Kingdom Setup";
     }
@@ -593,14 +585,14 @@ export default function Register() {
             </CardTitle>
             <CardDescription>
               {step === 1
-                ? "Create a new account to get started"
+                ? "Choose your race and name your kingdom"
                 : step === 2
-                  ? "Choose your race and name your kingdom"
+                  ? "Tell the story of your kingdom"
                   : step === 3
-                    ? "Tell the story of your kingdom"
+                    ? "Set your capital, motto, and zodiac sign"
                     : step === 4
-                      ? "Set your capital, motto, and zodiac sign"
-                      : "Review your kingdom details before confirming"}
+                      ? "Review your kingdom details before confirming"
+                      : "Create a new account to get started"}
             </CardDescription>
 
             {/* Progress indicator */}
@@ -706,68 +698,6 @@ export default function Register() {
                   exit="exit"
                   variants={pageVariants}
                   transition={{ duration: 0.3 }}
-                >
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="name@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="shadow-neuro-concave"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="shadow-neuro-concave"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm Password</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        className="shadow-neuro-concave"
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200 active:scale-95"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Creating account...
-                        </>
-                      ) : (
-                        "Create account"
-                      )}
-                    </Button>
-                  </form>
-                </motion.div>
-              )}
-
-              {step === 2 && (
-                <motion.div
-                  key="step2"
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                  transition={{ duration: 0.3 }}
                   className="space-y-4"
                 >
                   <div className="space-y-4">
@@ -866,9 +796,9 @@ export default function Register() {
                 </motion.div>
               )}
 
-              {step === 3 && (
+              {step === 2 && (
                 <motion.div
-                  key="step3"
+                  key="step2"
                   initial="initial"
                   animate="animate"
                   exit="exit"
@@ -954,9 +884,9 @@ export default function Register() {
                 </motion.div>
               )}
 
-              {step === 4 && (
+              {step === 3 && (
                 <motion.div
-                  key="step4"
+                  key="step3"
                   initial="initial"
                   animate="animate"
                   exit="exit"
@@ -1157,9 +1087,9 @@ export default function Register() {
                 </motion.div>
               )}
 
-              {step === 5 && (
+              {step === 4 && (
                 <motion.div
-                  key="step5"
+                  key="step4"
                   initial="initial"
                   animate="animate"
                   exit="exit"
@@ -1271,10 +1201,72 @@ export default function Register() {
                   </div>
                 </motion.div>
               )}
+
+              {step === 5 && (
+                <motion.div
+                  key="step5"
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                  transition={{ duration: 0.3 }}
+                >
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="name@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="shadow-neuro-concave"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="shadow-neuro-concave"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        className="shadow-neuro-concave"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200 active:scale-95"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Creating account...
+                        </>
+                      ) : (
+                        "Create account"
+                      )}
+                    </Button>
+                  </form>
+                </motion.div>
+              )}
             </AnimatePresence>
           </CardContent>
           <CardFooter className="flex justify-between pt-4 mt-2 border-t border-muted">
-            {step === 1 ? (
+            {step === 5 ? (
               <div className="w-full flex justify-between items-center">
                 <p className="text-sm text-muted-foreground">
                   Already have an account?{" "}
@@ -1298,7 +1290,7 @@ export default function Register() {
                   <div></div>
                 )}
 
-                {step < 5 ? (
+                {step < 4 ? (
                   <Button
                     type="button"
                     onClick={nextStep}
@@ -1306,25 +1298,26 @@ export default function Register() {
                   >
                     Continue <ChevronRight className="h-4 w-4" />
                   </Button>
-                ) : (
+                ) : step === 4 ? (
                   <Button
                     type="button"
-                    onClick={handleKingdomSetup}
+                    onClick={moveToAccountCreation}
                     className={`${selectedRace ? raceDetails.buttonColor : "bg-primary hover:bg-primary/90"} shadow-neuro-flat hover:shadow-neuro-pressed flex items-center gap-2 transition-all duration-200 active:scale-95`}
                     disabled={loading}
                   >
                     {loading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Creating Account...
+                        Processing...
                       </>
                     ) : (
                       <>
-                        Create Account <ChevronRight className="h-4 w-4" />
+                        Continue to Account Creation{" "}
+                        <ChevronRight className="h-4 w-4" />
                       </>
                     )}
                   </Button>
-                )}
+                ) : null}
               </>
             )}
           </CardFooter>
