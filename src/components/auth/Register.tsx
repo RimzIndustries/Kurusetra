@@ -406,7 +406,7 @@ export default function Register() {
             setTimeout(() => {
               console.log("Redirecting to dashboard after successful setup");
               // Using replace: true prevents the user from going back to the setup page
-              navigate("/", { replace: true });
+              navigate("/profile", { replace: true });
             }, 500);
           } catch (err: any) {
             console.error("Error saving kingdom information:", err);
@@ -556,9 +556,9 @@ export default function Register() {
                   <Button
                     variant="outline"
                     className="bg-white/90 hover:bg-white border-green-200 text-green-800 hover:text-green-900 shadow-neuro-flat"
-                    onClick={() => navigate("/", { replace: true })}
+                    onClick={() => navigate("/profile", { replace: true })}
                   >
-                    Enter Your Kingdom
+                    View Your Profile
                   </Button>
                 </motion.div>
 
