@@ -1,33 +1,47 @@
-import path from "path";
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import { tempo } from "tempo-devtools/dist/vite";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base:
-    process.env.NODE_ENV === "development"
-      ? "/"
-      : process.env.VITE_BASE_PATH || "/",
-  optimizeDeps: {
-    entries: ["src/main.tsx", "src/tempobook/**/*"],
-  },
-  plugins: [
-    react({
-      fastRefresh: {
-        exclude: [/MultiplayerContext\.tsx$/],
-      },
-    }),
-    tempo(),
-  ],
+  plugins: [react()],
   resolve: {
-    preserveSymlinks: true,
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': resolve(__dirname, './src'),
+      '@components': resolve(__dirname, './src/components'),
+      '@utils': resolve(__dirname, './src/utils'),
+      '@hooks': resolve(__dirname, './src/hooks'),
+      '@store': resolve(__dirname, './src/store'),
+      '@types': resolve(__dirname, './src/types'),
+    },
+  },
+  build: {
+    target: 'esnext',
+    minify: 'terser',
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['@radix-ui/react-*'],
+          'utils-vendor': ['date-fns', 'zod', 'zustand'],
+        },
+      },
     },
   },
   server: {
-    // @ts-ignore
-    allowedHosts: true,
+    port: 3000,
+    open: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+  preview: {
+    port: 3000,
+    open: true,
   },
 });
