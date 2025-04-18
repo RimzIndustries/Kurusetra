@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Alert, AlertDescription } from "../ui/alert";
-import RaceSelection from "../game/RaceSelection";
+import RaceSelectionDropdown from "../game/RaceSelectionDropdown";
 import { Progress } from "../ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import { Textarea } from "../ui/textarea";
@@ -283,12 +283,42 @@ export default function Register() {
       const { error, data } = await signUp(email, password);
       if (error) throw error;
 
-      // Set registration as complete and move to kingdom setup
+      // Set registration as complete and handle kingdom setup completion
       if (data?.user?.id) {
         setUserId(data.user.id);
         setRegistrationComplete(true);
-        setStep(2); // Move to kingdom setup step
-        setSetupProgress(50);
+        // Show success animation before navigating
+        setTimeout(() => {
+          setShowSuccess(true);
+          setTimeout(async () => {
+            try {
+              console.log("Saving kingdom setup data to user profile");
+              const result = await updateUserProfile({
+                race: selectedRace,
+                kingdomName: kingdomName.trim(),
+                kingdomDescription: kingdomDescription.trim(),
+                kingdomMotto: kingdomMotto.trim(),
+                kingdomCapital: kingdomCapital.trim(),
+                specialty: raceDetails.specialty,
+                zodiac: selectedZodiac,
+                setupCompleted: true,
+              });
+
+              console.log("Kingdom setup complete, profile updated:", result);
+              // Navigate after showing success animation
+              setTimeout(() => {
+                console.log("Redirecting to login after successful setup");
+                // Using replace: true prevents the user from going back to the setup page
+                navigate("/login", { replace: true });
+              }, 500);
+            } catch (err: any) {
+              console.error("Error saving kingdom information:", err);
+              setShowSuccess(false);
+              setError(err.message || "Failed to save kingdom information");
+              setLoading(false);
+            }
+          }, 1500);
+        }, 300);
       } else {
         // If no user ID is returned, redirect to login
         alert(
@@ -306,13 +336,17 @@ export default function Register() {
   const nextStep = () => {
     if (validateKingdomFields()) {
       setStep(step + 1);
-      setSetupProgress(step === 2 ? 75 : 100);
+      setSetupProgress(step === 1 ? 50 : step === 2 ? 75 : 100);
+      // Scroll to top for better UX
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   const prevStep = () => {
     setStep(step - 1);
-    setSetupProgress(step === 3 ? 50 : 75);
+    setSetupProgress(step === 2 ? 25 : step === 3 ? 50 : 75);
+    // Scroll to top for better UX
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Handle race selection
@@ -327,7 +361,7 @@ export default function Register() {
     let isValid = true;
     setError(null);
 
-    if (step === 2) {
+    if (step === 1) {
       if (!kingdomName.trim()) {
         errors.kingdomName = "Kingdom name is required";
         setError("Please enter a kingdom name");
@@ -342,7 +376,7 @@ export default function Register() {
         setError("Please select a race first");
         isValid = false;
       }
-    } else if (step === 3) {
+    } else if (step === 2) {
       if (
         kingdomDescription.trim().length > 0 &&
         kingdomDescription.trim().length < 10
@@ -354,7 +388,7 @@ export default function Register() {
         );
         isValid = false;
       }
-    } else if (step === 4) {
+    } else if (step === 3) {
       if (
         kingdomCapital.trim().length > 0 &&
         kingdomCapital.trim().length < 3
@@ -375,86 +409,50 @@ export default function Register() {
     return isValid;
   };
 
-  // Handle kingdom setup submission
-  const handleKingdomSetup = async () => {
+  // Move to account creation step
+  const moveToAccountCreation = () => {
     if (!validateKingdomFields()) {
       return;
     }
-
-    setLoading(true);
-
-    try {
-      // Show success animation before navigating
-      setTimeout(() => {
-        setShowSuccess(true);
-        setTimeout(async () => {
-          try {
-            console.log("Saving kingdom setup data to user profile");
-            const result = await updateUserProfile({
-              race: selectedRace,
-              kingdomName: kingdomName.trim(),
-              kingdomDescription: kingdomDescription.trim(),
-              kingdomMotto: kingdomMotto.trim(),
-              kingdomCapital: kingdomCapital.trim(),
-              specialty: raceDetails.specialty,
-              zodiac: selectedZodiac,
-              setupCompleted: true,
-            });
-
-            console.log("Kingdom setup complete, profile updated:", result);
-            // Navigate after showing success animation
-            setTimeout(() => {
-              console.log("Redirecting to dashboard after successful setup");
-              // Using replace: true prevents the user from going back to the setup page
-              navigate("/", { replace: true });
-            }, 500);
-          } catch (err: any) {
-            console.error("Error saving kingdom information:", err);
-            setShowSuccess(false);
-            setError(err.message || "Failed to save kingdom information");
-            setLoading(false);
-          }
-        }, 1500);
-      }, 300);
-    } catch (err: any) {
-      setError(err.message || "Failed to set up kingdom");
-      setLoading(false);
-    }
+    setStep(5); // Move to account creation step
+    setSetupProgress(100);
+    // Scroll to top for better UX
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Function to get step title with icon
   const getStepTitle = () => {
     switch (step) {
       case 1:
-        return "Create Account";
-      case 2:
         return (
           <>
             <Crown className="h-5 w-5 mr-2" />
             <span>Choose Race & Name</span>
           </>
         );
-      case 3:
+      case 2:
         return (
           <>
             <Landmark className="h-5 w-5 mr-2" />
             <span>Describe Your Kingdom</span>
           </>
         );
-      case 4:
+      case 3:
         return (
           <>
             <Flag className="h-5 w-5 mr-2" />
             <span>Capital & Zodiac</span>
           </>
         );
-      case 5:
+      case 4:
         return (
           <>
             <Check className="h-5 w-5 mr-2" />
             <span>Review & Confirm</span>
           </>
         );
+      case 5:
+        return "Create Account";
       default:
         return "Kingdom Setup";
     }
@@ -544,7 +542,8 @@ export default function Register() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.7 }}
                 >
-                  Your journey in the Kurusetra universe begins now.
+                  Your journey in the Kurusetra universe begins now. Welcome,
+                  ruler of {kingdomName}!
                 </motion.p>
 
                 <motion.div
@@ -555,8 +554,8 @@ export default function Register() {
                 >
                   <Button
                     variant="outline"
-                    className="bg-white/90 hover:bg-white border-green-200 text-green-800 hover:text-green-900 shadow-neuro-flat"
-                    onClick={() => navigate("/", { replace: true })}
+                    className="bg-white/90 hover:bg-white border-green-200 text-green-800 hover:text-green-900 shadow-neuro-flat font-medium"
+                    onClick={() => navigate("/profile", { replace: true })}
                   >
                     Enter Your Kingdom
                   </Button>
@@ -593,14 +592,14 @@ export default function Register() {
             </CardTitle>
             <CardDescription>
               {step === 1
-                ? "Create a new account to get started"
+                ? "Choose your race and name your kingdom"
                 : step === 2
-                  ? "Choose your race and name your kingdom"
+                  ? "Tell the story of your kingdom"
                   : step === 3
-                    ? "Tell the story of your kingdom"
+                    ? "Set your capital, motto, and zodiac sign"
                     : step === 4
-                      ? "Set your capital, motto, and zodiac sign"
-                      : "Review your kingdom details before confirming"}
+                      ? "Review your kingdom details before confirming"
+                      : "Create a new account to get started"}
             </CardDescription>
 
             {/* Progress indicator */}
@@ -669,14 +668,14 @@ export default function Register() {
                       transition={{ duration: 0.3 }}
                     >
                       {stepNumber === 1
-                        ? "Account"
+                        ? "Race"
                         : stepNumber === 2
-                          ? "Race"
+                          ? "Story"
                           : stepNumber === 3
-                            ? "Story"
+                            ? "Details"
                             : stepNumber === 4
-                              ? "Details"
-                              : "Review"}
+                              ? "Review"
+                              : "Account"}
                     </motion.span>
                   </motion.div>
                 ))}
@@ -706,91 +705,72 @@ export default function Register() {
                   exit="exit"
                   variants={pageVariants}
                   transition={{ duration: 0.3 }}
+                  className="space-y-6"
                 >
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="name@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="shadow-neuro-concave"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="shadow-neuro-concave"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm Password</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        className="shadow-neuro-concave"
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200 active:scale-95"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Creating account...
-                        </>
-                      ) : (
-                        "Create account"
-                      )}
-                    </Button>
-                  </form>
-                </motion.div>
-              )}
-
-              {step === 2 && (
-                <motion.div
-                  key="step2"
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-4"
-                >
-                  <div className="space-y-4">
+                  {/* Race Selection Section with improved styling */}
+                  <div className="space-y-3">
                     <Label
                       htmlFor="race"
-                      className="flex items-center gap-2 text-base font-medium"
+                      className="flex items-center gap-2 text-base font-semibold"
                     >
+                      <Crown className="h-5 w-5" />
                       Choose Your Race
                     </Label>
-                    <RaceSelection
-                      onSelectRace={handleRaceSelection}
-                      isOpen={true}
-                    />
+                    <p className="text-sm text-muted-foreground">
+                      Select the race that will define your kingdom's strengths
+                      and culture
+                    </p>
+                    <div className="bg-accent/20 rounded-lg p-4 shadow-neuro-flat">
+                      <RaceSelectionDropdown
+                        onSelectRace={handleRaceSelection}
+                        selectedRace={selectedRace}
+                      />
+                    </div>
+
+                    {/* Race details card - only shown when a race is selected */}
+                    {selectedRace && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className={`mt-2 p-3 rounded-lg ${raceDetails.color} border border-${raceDetails.color.split("-")[1]}-300 shadow-neuro-flat`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <div
+                            className={`p-1.5 rounded-md bg-${raceDetails.color.split("-")[1]}-200`}
+                          >
+                            {raceDetails.icon}
+                          </div>
+                          <h4
+                            className={`font-medium ${raceDetails.textColor}`}
+                          >
+                            {raceDetails.name}
+                          </h4>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Specialty: {raceDetails.specialty}
+                        </p>
+                        <p className="text-xs font-medium">
+                          {raceDetails.startingBonus}
+                        </p>
+                      </motion.div>
+                    )}
                   </div>
 
-                  <div className="space-y-2 mt-6">
+                  {/* Kingdom Name Section with improved styling */}
+                  <div className="space-y-3 mt-2">
                     <Label
                       htmlFor="kingdomName"
-                      className="flex items-center gap-2 text-base font-medium"
+                      className="flex items-center gap-2 text-base font-semibold"
                     >
-                      <Crown className="h-4 w-4" />
+                      <Landmark className="h-5 w-5" />
                       Kingdom Name
                     </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Choose a name that reflects the glory of your{" "}
+                      {selectedRace ? raceDetails.name : "kingdom's"}{" "}
+                      civilization
+                    </p>
                     <div className="relative">
                       <Input
                         id="kingdomName"
@@ -801,7 +781,7 @@ export default function Register() {
                         onBlur={() => setFocusedField(null)}
                         required
                         maxLength={30}
-                        className={`border-2 focus:border-2 focus:ring-0 focus:ring-offset-0 ${fieldErrors.kingdomName ? "border-red-300 shadow-neuro-concave-error" : focusedField === "kingdomName" ? `border-${selectedRace ? raceDetails.buttonColor.split("-")[1] : "primary"}-400 shadow-neuro-concave-focus` : "shadow-neuro-concave"} h-11 px-4 transition-all duration-200`}
+                        className={`border-2 focus:border-2 focus:ring-0 focus:ring-offset-0 ${fieldErrors.kingdomName ? "border-red-300 shadow-neuro-concave-error" : focusedField === "kingdomName" ? `border-${selectedRace ? raceDetails.buttonColor.split("-")[1] : "primary"}-400 shadow-neuro-concave-focus` : "shadow-neuro-concave"} h-12 px-4 transition-all duration-200 text-base`}
                       />
 
                       {/* Validation icon */}
@@ -849,13 +829,8 @@ export default function Register() {
                       )}
                     </AnimatePresence>
 
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Choose a name that reflects the glory of your{" "}
-                      {selectedRace ? raceDetails.name : ""} civilization
-                    </p>
-
                     {/* Character count */}
-                    <div className="flex justify-end mt-1">
+                    <div className="flex justify-end">
                       <span
                         className={`text-xs ${kingdomName.length > 25 ? "text-amber-500" : "text-muted-foreground"}`}
                       >
@@ -866,9 +841,9 @@ export default function Register() {
                 </motion.div>
               )}
 
-              {step === 3 && (
+              {step === 2 && (
                 <motion.div
-                  key="step3"
+                  key="step2"
                   initial="initial"
                   animate="animate"
                   exit="exit"
@@ -954,9 +929,9 @@ export default function Register() {
                 </motion.div>
               )}
 
-              {step === 4 && (
+              {step === 3 && (
                 <motion.div
-                  key="step4"
+                  key="step3"
                   initial="initial"
                   animate="animate"
                   exit="exit"
@@ -1157,9 +1132,9 @@ export default function Register() {
                 </motion.div>
               )}
 
-              {step === 5 && (
+              {step === 4 && (
                 <motion.div
-                  key="step5"
+                  key="step4"
                   initial="initial"
                   animate="animate"
                   exit="exit"
@@ -1271,14 +1246,79 @@ export default function Register() {
                   </div>
                 </motion.div>
               )}
+
+              {step === 5 && (
+                <motion.div
+                  key="step5"
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                  transition={{ duration: 0.3 }}
+                >
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="name@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="shadow-neuro-concave"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="shadow-neuro-concave"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        className="shadow-neuro-concave"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className={`w-full shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200 active:scale-95 ${selectedRace ? raceDetails.buttonColor : ""}`}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Creating your kingdom...
+                        </>
+                      ) : (
+                        "Create Your Kingdom"
+                      )}
+                    </Button>
+                  </form>
+                </motion.div>
+              )}
             </AnimatePresence>
           </CardContent>
           <CardFooter className="flex justify-between pt-4 mt-2 border-t border-muted">
-            {step === 1 ? (
+            {step === 5 ? (
               <div className="w-full flex justify-between items-center">
                 <p className="text-sm text-muted-foreground">
                   Already have an account?{" "}
-                  <Link to="/login" className="text-primary hover:underline">
+                  <Link
+                    to="/login"
+                    className={`${selectedRace ? raceDetails.textColor : "text-primary"} hover:underline font-medium`}
+                  >
                     Login
                   </Link>
                 </p>
@@ -1298,7 +1338,7 @@ export default function Register() {
                   <div></div>
                 )}
 
-                {step < 5 ? (
+                {step < 4 ? (
                   <Button
                     type="button"
                     onClick={nextStep}
@@ -1306,25 +1346,26 @@ export default function Register() {
                   >
                     Continue <ChevronRight className="h-4 w-4" />
                   </Button>
-                ) : (
+                ) : step === 4 ? (
                   <Button
                     type="button"
-                    onClick={handleKingdomSetup}
+                    onClick={moveToAccountCreation}
                     className={`${selectedRace ? raceDetails.buttonColor : "bg-primary hover:bg-primary/90"} shadow-neuro-flat hover:shadow-neuro-pressed flex items-center gap-2 transition-all duration-200 active:scale-95`}
                     disabled={loading}
                   >
                     {loading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Creating Kingdom...
+                        Processing...
                       </>
                     ) : (
                       <>
-                        Begin Your Journey <ChevronRight className="h-4 w-4" />
+                        Finalize Kingdom Setup{" "}
+                        <ChevronRight className="h-4 w-4" />
                       </>
                     )}
                   </Button>
-                )}
+                ) : null}
               </>
             )}
           </CardFooter>

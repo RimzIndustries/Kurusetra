@@ -4,13 +4,17 @@ import Layout from "./components/Layout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import LoadingSpinner from "./components/LoadingSpinner";
 import OfflineIndicator from "./components/OfflineIndicator";
+import Login from "./components/auth/Login";
+import Register from "./components/auth/Register";
+import UserProfile from "./components/UserProfile";
+import ProtectedRoute from "./components/ProtectedRoute";
+import LandingPage from "./components/LandingPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { MultiplayerProvider } from "./contexts/MultiplayerContext";
-import ProtectedRoute from "./components/ProtectedRoute";
 import React from "react";
 import routes from "tempo-routes";
 import { captureError } from "./utils/sentry";
-import PerformanceMetrics from "./components/PerformanceMetrics";
+import { PerformanceMetrics } from "./components/PerformanceMetrics";
 
 // Lazy load components
 const Home = lazy(() => import("./components/home"));
@@ -21,9 +25,6 @@ const DewanRaja = lazy(() => import("./components/game/DewanRaja"));
 const CombatInterface = lazy(() => import("./components/game/CombatInterface"));
 const KingdomOverview = lazy(() => import("./components/game/KingdomOverview"));
 const GameMap = lazy(() => import("./components/game/GameMap"));
-const Login = lazy(() => import("./components/auth/Login"));
-const Register = lazy(() => import("./components/auth/Register"));
-const UserProfile = lazy(() => import("./components/UserProfile"));
 
 // Memoized components
 const MemoizedLayout = React.memo(Layout);
@@ -53,6 +54,7 @@ function AppRoutes() {
                   {/* Public routes */}
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/landing" element={<LandingPage />} />
 
                   {/* Protected routes */}
                   <Route element={<MemoizedProtectedRoute />}>
