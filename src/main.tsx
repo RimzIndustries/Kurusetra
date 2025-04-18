@@ -5,7 +5,11 @@ import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 
 import { TempoDevtools } from "tempo-devtools";
-TempoDevtools.init();
+
+// Only initialize Tempo devtools in browser environments
+if (typeof window !== "undefined") {
+  TempoDevtools.init();
+}
 
 const basename = import.meta.env.BASE_URL;
 
