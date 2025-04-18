@@ -80,7 +80,12 @@ function AppRoutes() {
               <PerformanceMetrics />
               <ToastContainer />
               {/* For the tempo routes */}
-              {import.meta.env.VITE_TEMPO && useRoutes(routes)}
+              {import.meta.env.VITE_TEMPO &&
+                typeof window !== "undefined" &&
+                useRoutes(routes)}
+              {import.meta.env.VITE_TEMPO && typeof window !== "undefined" && (
+                <Route path="/tempobook/*" />
+              )}
               <Suspense
                 fallback={
                   <div className="flex items-center justify-center min-h-screen">
