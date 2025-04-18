@@ -1,5 +1,11 @@
 import { Suspense, lazy, useCallback } from "react";
-import { useRoutes, Routes, Route, BrowserRouter as Router } from "react-router-dom";
+import {
+  useRoutes,
+  Routes,
+  Route,
+  BrowserRouter as Router,
+} from "react-router-dom";
+import routes from "tempo-routes";
 import Layout from "./components/Layout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -14,11 +20,13 @@ import { MultiplayerProvider } from "./contexts/MultiplayerContext";
 import React from "react";
 import { captureError } from "./utils/sentry";
 import { PerformanceMetrics } from "./components/PerformanceMetrics";
-import { ToastContainer } from './components/ToastContainer';
+import { ToastContainer } from "./components/ToastContainer";
 
 // Lazy load components
 const Home = lazy(() => import("./components/home"));
-const ResourceManagement = lazy(() => import("./components/game/ResourceManagement"));
+const ResourceManagement = lazy(
+  () => import("./components/game/ResourceManagement"),
+);
 const Building = lazy(() => import("./components/game/Building"));
 const Military = lazy(() => import("./components/game/Military"));
 const DewanRaja = lazy(() => import("./components/game/DewanRaja"));
@@ -32,7 +40,7 @@ const MemoizedProtectedRoute = React.memo(ProtectedRoute);
 
 function AppRoutes() {
   const handleError = useCallback((error: Error) => {
-    captureError(error, { component: 'App' });
+    captureError(error, { component: "App" });
   }, []);
 
   const routes = useRoutes([
@@ -71,6 +79,8 @@ function AppRoutes() {
               <OfflineIndicator />
               <PerformanceMetrics />
               <ToastContainer />
+              {/* For the tempo routes */}
+              {import.meta.env.VITE_TEMPO && useRoutes(routes)}
               <Suspense
                 fallback={
                   <div className="flex items-center justify-center min-h-screen">
