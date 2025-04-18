@@ -15,9 +15,43 @@ import {
   Users,
   Flag,
   Award,
+  Bow,
+  Horse,
+  Zap,
 } from "lucide-react";
+import { useGameState } from '../../hooks/useGameState';
+import { useToast } from '../../hooks/useToast';
+import { NeumorphicCard, NeumorphicButton, NeumorphicBadge } from '@/styles/components';
+
+interface MilitaryUnit {
+  id: string;
+  name: string;
+  level: number;
+  count: number;
+  cost: {
+    gold: number;
+    food: number;
+    time: number;
+  };
+  stats: {
+    attack: number;
+    defense: number;
+    health: number;
+  };
+  training: number;
+  maxCount: number;
+  icon: JSX.Element;
+  power: number;
+  upkeep: number;
+  trainingTime: number;
+}
 
 const Military = () => {
+  const { player, updatePlayer } = useGameState();
+  const { addToast } = useToast();
+  const [units, setUnits] = useState<MilitaryUnit[]>(player.militaryUnits || []);
+  const [isTraining, setIsTraining] = useState(false);
+
   // Mock data for troops
   const [troops, setTroops] = useState([
     {
@@ -108,10 +142,122 @@ const Military = () => {
   const [trainingCount, setTrainingCount] = useState(10);
   const [selectedTroop, setSelectedTroop] = useState(null);
 
-  // Mock function to start training
-  const startTraining = (troopId, count) => {
-    console.log(`Starting training for ${count} troops of type ${troopId}`);
-    // In a real app, this would call an API to start the training
+  const canAfford = (cost: MilitaryUnit['cost']) => {
+    return (
+      player.resources.gold >= cost.gold &&
+      player.resources.food >= cost.food
+    );
+  };
+
+  const trainUnit = async (unit: MilitaryUnit) => {
+    if (isTraining) return;
+    if (!canAfford(unit.cost)) {
+      addToast({
+        message: 'Not enough resources to train unit!',
+        type: 'warning'
+      });
+      return;
+    }
+
+    setIsTraining(true);
+    try {
+      const updatedResources = {
+        ...player.resources,
+        gold: player.resources.gold - unit.cost.gold,
+        food: player.resources.food - unit.cost.food
+      };
+
+      const existingUnit = units.find(u => u.id === unit.id);
+      const updatedUnits = existingUnit
+        ? units.map(u => 
+            u.id === unit.id 
+              ? { ...u, count: u.count + 1 }
+              : u
+          )
+        : [...units, { ...unit, count: 1 }];
+
+      await updatePlayer({
+        resources: updatedResources,
+        militaryUnits: updatedUnits
+      });
+
+      setUnits(updatedUnits);
+      
+      addToast({
+        message: `${unit.name} trained successfully!`,
+        type: 'success'
+      });
+    } catch (error) {
+      addToast({
+        message: 'Failed to train unit',
+        type: 'error'
+      });
+    } finally {
+      setIsTraining(false);
+    }
+  };
+
+  const upgradeUnit = async (unitId: string) => {
+    if (isTraining) return;
+
+    const unit = units.find(u => u.id === unitId);
+    if (!unit) return;
+
+    const upgradeCost = {
+      gold: unit.cost.gold * (unit.level + 1),
+      food: unit.cost.food * (unit.level + 1),
+      time: unit.cost.time
+    };
+
+    if (!canAfford(upgradeCost)) {
+      addToast({
+        message: 'Not enough resources to upgrade unit!',
+        type: 'warning'
+      });
+      return;
+    }
+
+    setIsTraining(true);
+    try {
+      const updatedResources = {
+        ...player.resources,
+        gold: player.resources.gold - upgradeCost.gold,
+        food: player.resources.food - upgradeCost.food
+      };
+
+      const updatedUnits = units.map(u => 
+        u.id === unitId 
+          ? { 
+              ...u, 
+              level: u.level + 1,
+              stats: {
+                attack: u.stats.attack * 1.2,
+                defense: u.stats.defense * 1.2,
+                health: u.stats.health * 1.2
+              }
+            }
+          : u
+      );
+
+      await updatePlayer({
+        resources: updatedResources,
+        militaryUnits: updatedUnits
+      });
+
+      setUnits(updatedUnits);
+      
+      addToast({
+        message: `${unit.name} upgraded to level ${unit.level + 1}!`,
+        type: 'success'
+      });
+    } catch (error) {
+      addToast({
+        message: 'Failed to upgrade unit',
+        type: 'error'
+      });
+    } finally {
+      setIsTraining(false);
+    }
   };
 
   // Animation variants
@@ -148,409 +294,103 @@ const Military = () => {
     },
   };
 
+  const totalPower = units.reduce((sum, unit) => sum + (unit.count * unit.power), 0);
+  const totalUpkeep = units.reduce((sum, unit) => sum + (unit.count * unit.upkeep), 0);
+
   return (
-    <div className="bg-background min-h-screen p-6 bg-gradient-to-b from-background to-background/95 relative overflow-hidden text-foreground">
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-        className="max-w-7xl mx-auto"
-      >
-        <motion.div
-          className="flex items-center gap-3 mb-6"
-          variants={itemVariants}
-        >
-          <Flag className="h-8 w-8 text-red-500" />
-          <h1 className="text-4xl font-bold text-neuro-primary">
-            Military Management
-          </h1>
-        </motion.div>
+    <div className="space-y-6">
+      <NeumorphicCard>
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">Military Overview</h2>
+            <div className="flex gap-2">
+              <NeumorphicBadge type="info">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Power: {totalPower}
+                </div>
+              </NeumorphicBadge>
+              <NeumorphicBadge type="warning">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Upkeep: {totalUpkeep}/h
+                </div>
+              </NeumorphicBadge>
+            </div>
+          </div>
 
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
-          variants={itemVariants}
-        >
-          <motion.div whileHover="hover" variants={cardHoverVariants}>
-            <Card className="bg-neuro-bg border-neuro-primary/20 shadow-neuro-flat overflow-hidden">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl flex items-center">
-                  <Sword className="h-5 w-5 mr-2 text-red-500" />
-                  Attack Power
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-red-500">1,850</p>
-              </CardContent>
-            </Card>
-          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {units.map((unit) => (
+              <div key={unit.name} className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    {unit.icon}
+                    <span className="font-medium">{unit.name}</span>
+                  </div>
+                  <div className="text-sm">
+                    {unit.count}/{unit.maxCount}
+                  </div>
+                </div>
 
-          <motion.div whileHover="hover" variants={cardHoverVariants}>
-            <Card className="bg-neuro-bg border-neuro-primary/20 shadow-neuro-flat overflow-hidden">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl flex items-center">
-                  <Shield className="h-5 w-5 mr-2 text-blue-500" />
-                  Defense Power
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-blue-500">2,120</p>
-              </CardContent>
-            </Card>
-          </motion.div>
+                <NeumorphicProgress 
+                  value={(unit.count / unit.maxCount) * 100}
+                />
 
-          <motion.div whileHover="hover" variants={cardHoverVariants}>
-            <Card className="bg-neuro-bg border-neuro-primary/20 shadow-neuro-flat overflow-hidden">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl flex items-center">
-                  <Users className="h-5 w-5 mr-2 text-green-500" />
-                  Total Troops
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-green-500">250</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </motion.div>
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div className="text-center">
+                    <div className="font-medium">Power</div>
+                    <div>{unit.power}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium">Upkeep</div>
+                    <div>{unit.upkeep}/h</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium">Training</div>
+                    <div>{unit.trainingTime}m</div>
+                  </div>
+                </div>
 
-        <motion.div variants={itemVariants}>
-          <Tabs defaultValue="current" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6 bg-neuro-bg border border-neuro-primary/20 shadow-neuro-flat">
-              <TabsTrigger
-                value="current"
-                className="data-[state=active]:bg-neuro-primary/10 data-[state=active]:text-neuro-primary"
-              >
-                Current Army
-              </TabsTrigger>
-              <TabsTrigger
-                value="training"
-                className="data-[state=active]:bg-neuro-primary/10 data-[state=active]:text-neuro-primary"
-              >
-                Training
-              </TabsTrigger>
-              <TabsTrigger
-                value="new"
-                className="data-[state=active]:bg-neuro-primary/10 data-[state=active]:text-neuro-primary"
-              >
-                New Units
-              </TabsTrigger>
-            </TabsList>
+                {unit.training > 0 && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                    <span>Training {unit.training} units</span>
+                  </div>
+                )}
 
-            <TabsContent value="current" className="space-y-6">
-              <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {troops.map((troop) => (
-                  <motion.div
-                    key={troop.id}
-                    variants={itemVariants}
-                    whileHover="hover"
-                  >
-                    <Card className="bg-neuro-bg border-neuro-primary/20 shadow-neuro-flat overflow-hidden transition-all duration-300 hover:border-neuro-primary/50 neuro-hover neuro-glow">
-                      <CardHeader className="bg-neuro-bg pb-2">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            {troop.icon}
-                            <div>
-                              <CardTitle className="text-xl">
-                                {troop.name}
-                              </CardTitle>
-                              <Badge
-                                variant="outline"
-                                className="mt-1 border-neuro-primary/30 bg-neuro-bg shadow-neuro-flat"
-                              >
-                                {troop.count} units
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-4">
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <p className="text-sm text-slate-400">Attack</p>
-                            <p className="font-medium flex items-center gap-1">
-                              <Sword className="h-3 w-3 text-red-500" />
-                              {troop.attack}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-slate-400">Defense</p>
-                            <p className="font-medium flex items-center gap-1">
-                              <Shield className="h-3 w-3 text-blue-500" />
-                              {troop.defense}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-slate-400">Speed</p>
-                            <p className="font-medium">{troop.speed}</p>
-                          </div>
-                        </div>
-                        <Separator className="my-4 bg-neuro-primary/20" />
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="text-sm text-slate-400">
-                              Cost per unit
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Coins className="h-4 w-4 text-yellow-500" />
-                              <span>{troop.goldCost}</span>
-                              <Wheat className="h-4 w-4 text-green-500 ml-2" />
-                              <span>{troop.foodCost}</span>
-                            </div>
-                          </div>
-                          <Button
-                            size="sm"
-                            onClick={() => setSelectedTroop(troop)}
-                            className="bg-neuro-bg text-neuro-primary shadow-neuro-flat hover:shadow-neuro-pressed border-neuro-primary/20"
-                          >
-                            Train More
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </motion.div>
+                <div className="flex gap-2">
+                  <NeumorphicButton className="flex-1">
+                    Train
+                  </NeumorphicButton>
+                  <NeumorphicButton className="flex-1">
+                    Upgrade
+                  </NeumorphicButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </NeumorphicCard>
 
-              {selectedTroop && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Card className="mt-6 bg-neuro-bg border-neuro-primary/20 shadow-neuro-flat">
-                    <CardHeader className="bg-neuro-bg">
-                      <CardTitle className="flex items-center gap-2">
-                        {selectedTroop.icon}
-                        Train {selectedTroop.name}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-4">
-                        <div className="flex-1">
-                          <label className="text-sm font-medium mb-1 block text-foreground">
-                            Number of units to train
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            value={trainingCount}
-                            onChange={(e) =>
-                              setTrainingCount(parseInt(e.target.value) || 1)
-                            }
-                            className="w-full p-2 border rounded bg-neuro-bg border-neuro-primary/30 text-foreground shadow-neuro-flat"
-                          />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium mb-1 text-foreground">
-                            Total Cost
-                          </p>
-                          <div className="flex items-center gap-2 bg-neuro-bg p-2 rounded-md shadow-neuro-flat">
-                            <Coins className="h-4 w-4 text-yellow-500" />
-                            <span>
-                              {selectedTroop.goldCost * trainingCount}
-                            </span>
-                            <Wheat className="h-4 w-4 text-green-500 ml-2" />
-                            <span>
-                              {selectedTroop.foodCost * trainingCount}
-                            </span>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium mb-1 text-foreground">
-                            Training Time
-                          </p>
-                          <div className="flex items-center gap-2 bg-neuro-bg p-2 rounded-md shadow-neuro-flat">
-                            <Clock className="h-4 w-4 text-blue-400" />
-                            <span>{selectedTroop.trainingTime}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => setSelectedTroop(null)}
-                          className="border-neuro-primary/30 text-foreground hover:bg-neuro-primary/10"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={() =>
-                            startTraining(selectedTroop.id, trainingCount)
-                          }
-                          className="bg-neuro-bg text-neuro-primary shadow-neuro-flat hover:shadow-neuro-pressed border-neuro-primary/20"
-                        >
-                          Start Training
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="training" className="space-y-6">
-              {trainingInProgress.length > 0 ? (
-                <motion.div
-                  className="space-y-6"
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  <h2 className="text-xl font-semibold flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-blue-400" />
-                    In Progress
-                  </h2>
-                  {trainingInProgress.map((item) => (
-                    <motion.div key={item.id} variants={itemVariants}>
-                      <Card className="overflow-hidden bg-neuro-bg border-neuro-primary/20 shadow-neuro-flat">
-                        <CardContent className="pt-6">
-                          <div className="flex justify-between items-center mb-2">
-                            <div>
-                              <span className="text-lg font-medium">
-                                {item.troopName}
-                              </span>
-                              <span className="text-sm text-slate-400 ml-2">
-                                ({item.count} units)
-                              </span>
-                            </div>
-                            <span className="text-amber-500 font-semibold">
-                              {item.progress}%
-                            </span>
-                          </div>
-                          <Progress
-                            value={item.progress}
-                            className="h-2 mb-2 bg-neuro-primary/10"
-                          />
-                          <p className="text-sm text-slate-400 flex items-center gap-1">
-                            <Clock className="h-4 w-4 text-blue-400" />
-                            Completes in {item.timeRemaining}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              ) : (
-                <motion.div
-                  className="text-center py-12"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Sword className="h-12 w-12 mx-auto text-neuro-primary opacity-50" />
-                  <h3 className="mt-4 text-lg font-medium">
-                    No Training in Progress
-                  </h3>
-                  <p className="text-slate-400 mt-2">
-                    Start training new troops from the Current Army tab.
-                  </p>
-                </motion.div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="new" className="space-y-6">
-              <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {availableTroops.map((troop) => (
-                  <motion.div
-                    key={troop.id}
-                    variants={itemVariants}
-                    whileHover="hover"
-                  >
-                    <Card className="bg-neuro-bg border-neuro-primary/20 shadow-neuro-flat overflow-hidden transition-all duration-300 hover:border-neuro-primary/50 neuro-hover neuro-glow">
-                      <CardHeader className="bg-neuro-bg pb-2">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            {troop.icon}
-                            <div className="flex items-center gap-2">
-                              <CardTitle className="text-xl">
-                                {troop.name}
-                              </CardTitle>
-                              <Badge className="bg-neuro-bg text-amber-500 border-amber-500/50 shadow-neuro-flat">
-                                New
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-4">
-                        <div className="grid grid-cols-3 gap-4 mb-4">
-                          <div>
-                            <p className="text-sm text-slate-400">Attack</p>
-                            <p className="font-medium flex items-center gap-1">
-                              <Sword className="h-3 w-3 text-red-500" />
-                              {troop.attack}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-slate-400">Defense</p>
-                            <p className="font-medium flex items-center gap-1">
-                              <Shield className="h-3 w-3 text-blue-500" />
-                              {troop.defense}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-slate-400">Speed</p>
-                            <p className="font-medium">{troop.speed}</p>
-                          </div>
-                        </div>
-                        <div className="space-y-2 mb-4 bg-neuro-bg p-3 rounded-md shadow-neuro-flat">
-                          <div className="flex justify-between text-sm">
-                            <span className="flex items-center">
-                              <Coins className="h-4 w-4 mr-1 text-yellow-500" />
-                              Cost per unit:
-                            </span>
-                            <span>{troop.goldCost}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="flex items-center">
-                              <Wheat className="h-4 w-4 mr-1 text-green-500" />
-                              Food per unit:
-                            </span>
-                            <span>{troop.foodCost}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="flex items-center">
-                              <Clock className="h-4 w-4 mr-1 text-blue-400" />{" "}
-                              Training time:
-                            </span>
-                            <span>{troop.trainingTime}</span>
-                          </div>
-                          <Separator className="my-2 bg-neuro-primary/20" />
-                          <div className="text-sm">
-                            <span className="font-medium flex items-center gap-1">
-                              <Award className="h-4 w-4 text-amber-500" />{" "}
-                              Requirements:
-                            </span>{" "}
-                            <span className="text-slate-300 ml-5">
-                              {troop.requirements}
-                            </span>
-                          </div>
-                        </div>
-                        <Button
-                          className="w-full bg-neuro-bg text-neuro-primary shadow-neuro-flat hover:shadow-neuro-pressed border-neuro-primary/20"
-                          onClick={() => console.log(`Unlock ${troop.name}`)}
-                        >
-                          Unlock Unit
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </TabsContent>
-          </Tabs>
-        </motion.div>
-      </motion.div>
+      <NeumorphicCard>
+        <div className="p-6">
+          <h3 className="text-xl font-bold mb-4">Military Bonuses</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <NeumorphicBadge type="success">
+              Infantry Attack +15%
+            </NeumorphicBadge>
+            <NeumorphicBadge type="info">
+              Archer Range +20%
+            </NeumorphicBadge>
+            <NeumorphicBadge type="warning">
+              Cavalry Speed +25%
+            </NeumorphicBadge>
+            <NeumorphicBadge type="error">
+              Special Force Power +30%
+            </NeumorphicBadge>
+          </div>
+        </div>
+      </NeumorphicCard>
     </div>
   );
 };

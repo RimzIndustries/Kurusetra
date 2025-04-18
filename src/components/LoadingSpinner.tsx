@@ -1,4 +1,5 @@
 import React from 'react';
+import styled from 'styled-components';
 import { motion } from 'framer-motion';
 
 interface LoadingSpinnerProps {
@@ -6,26 +7,61 @@ interface LoadingSpinnerProps {
   text?: string;
 }
 
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+`;
+
+const SpinnerContainer = styled(motion.div)<{ size: 'sm' | 'md' | 'lg' }>`
+  width: ${props => {
+    switch (props.size) {
+      case 'sm': return '1.5rem';
+      case 'md': return '2rem';
+      case 'lg': return '3rem';
+      default: return '2rem';
+    }
+  }};
+  height: ${props => {
+    switch (props.size) {
+      case 'sm': return '1.5rem';
+      case 'md': return '2rem';
+      case 'lg': return '3rem';
+      default: return '2rem';
+    }
+  }};
+  border: 4px solid ${props => props.theme.accent};
+  border-radius: 50%;
+  box-shadow: 
+    5px 5px 10px ${props => props.theme.shadow},
+    -5px -5px 10px ${props => props.theme.light};
+`;
+
+const LoadingText = styled(motion.p)<{ size: 'sm' | 'md' | 'lg' }>`
+  color: ${props => props.theme.text};
+  font-size: ${props => {
+    switch (props.size) {
+      case 'sm': return '0.875rem';
+      case 'md': return '1rem';
+      case 'lg': return '1.125rem';
+      default: return '1rem';
+    }
+  }};
+  text-shadow: 
+    1px 1px 2px ${props => props.theme.shadow},
+    -1px -1px 2px ${props => props.theme.light};
+`;
+
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
   size = 'md', 
   text = 'Loading...' 
 }) => {
-  const sizeClasses = {
-    sm: 'w-6 h-6',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12'
-  };
-
-  const textSizeClasses = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg'
-  };
-
   return (
-    <div className="flex flex-col items-center justify-center space-y-4">
-      <motion.div
-        className={`${sizeClasses[size]} border-4 border-blue-500 rounded-full`}
+    <Container>
+      <SpinnerContainer
+        size={size}
         animate={{
           rotate: 360,
           scale: [1, 1.2, 1]
@@ -39,8 +75,8 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           borderTopColor: 'transparent'
         }}
       />
-      <motion.p 
-        className={`${textSizeClasses[size]} text-gray-600`}
+      <LoadingText 
+        size={size}
         animate={{
           opacity: [0.5, 1, 0.5]
         }}
@@ -51,8 +87,8 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         }}
       >
         {text}
-      </motion.p>
-    </div>
+      </LoadingText>
+    </Container>
   );
 };
 

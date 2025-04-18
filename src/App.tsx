@@ -14,6 +14,7 @@ import { MultiplayerProvider } from "./contexts/MultiplayerContext";
 import React from "react";
 import { captureError } from "./utils/sentry";
 import { PerformanceMetrics } from "./components/PerformanceMetrics";
+import { ToastContainer } from './components/ToastContainer';
 
 // Lazy load components
 const Home = lazy(() => import("./components/home"));
@@ -69,6 +70,7 @@ function AppRoutes() {
             <div className="min-h-screen bg-gray-100">
               <OfflineIndicator />
               <PerformanceMetrics />
+              <ToastContainer />
               <Suspense
                 fallback={
                   <div className="flex items-center justify-center min-h-screen">

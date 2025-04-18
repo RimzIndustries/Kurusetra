@@ -17,45 +17,36 @@ import {
   Shield,
   Sword,
   Sparkles,
+  Warehouse,
+  Castle,
 } from "lucide-react";
+import { useGameState } from '../../hooks/useGameState';
+import { useToast } from '../../hooks/useToast';
+import { NeumorphicCard, NeumorphicButton, NeumorphicProgress, NeumorphicBadge } from '@/styles/components';
 
-const Building = () => {
-  // Mock data for buildings
-  const [buildings, setBuildings] = useState([
-    {
-      id: 1,
-      name: "Barracks",
-      level: 4,
-      description: "Train military units",
-      goldCost: 2500,
-      foodCost: 1200,
-      timeToUpgrade: "8h",
-      icon: <Building2 className="h-8 w-8 text-red-500" />,
-      benefits: "Unlocks new unit types",
-    },
-    {
-      id: 2,
-      name: "Farm",
-      level: 5,
-      description: "Produces food resources",
-      goldCost: 1800,
-      foodCost: 800,
-      timeToUpgrade: "6h",
-      icon: <Wheat className="h-8 w-8 text-green-500" />,
-      benefits: "+15% food production",
-    },
-    {
-      id: 3,
-      name: "Treasury",
-      level: 3,
-      description: "Stores and generates gold",
-      goldCost: 3000,
-      foodCost: 1500,
-      timeToUpgrade: "10h",
-      icon: <Coins className="h-8 w-8 text-yellow-500" />,
-      benefits: "+20% gold storage capacity",
-    },
-  ]);
+interface Building {
+  id: string;
+  name: string;
+  level: number;
+  maxLevel: number;
+  icon: JSX.Element;
+  description: string;
+  production: {
+    type: string;
+    amount: number;
+  };
+  upgradeTime: number;
+  upgradeCost: {
+    gold: number;
+    materials: number;
+  };
+}
+
+const BuildingManagement = () => {
+  const { player, updatePlayer } = useGameState();
+  const { addToast } = useToast();
+  const [buildings, setBuildings] = useState<Building[]>(player.buildings || []);
+  const [isConstructing, setIsConstructing] = useState(false);
 
   // Mock data for construction in progress
   const [constructionInProgress, setConstructionInProgress] = useState([
@@ -94,16 +85,110 @@ const Building = () => {
     },
   ]);
 
-  // Mock function to start upgrade
-  const startUpgrade = (buildingId) => {
-    console.log(`Starting upgrade for building ${buildingId}`);
-    // In a real app, this would call an API to start the upgrade
+  const canAfford = (cost: Building['upgradeCost']) => {
+    return (
+      player.resources.gold >= cost.gold &&
+      player.resources.materials >= cost.materials
+    );
   };
 
-  // Mock function to start construction
-  const startConstruction = (buildingId) => {
-    console.log(`Starting construction for building ${buildingId}`);
-    // In a real app, this would call an API to start the construction
+  const constructBuilding = async (building: Building) => {
+    if (isConstructing) return;
+    if (!canAfford(building.upgradeCost)) {
+      addToast({
+        message: 'Not enough resources to construct building!',
+        type: 'warning'
+      });
+      return;
+    }
+
+    setIsConstructing(true);
+    try {
+      const updatedResources = {
+        ...player.resources,
+        gold: player.resources.gold - building.upgradeCost.gold,
+        materials: player.resources.materials - building.upgradeCost.materials
+      };
+
+      const newBuilding = {
+        ...building,
+        id: Math.random().toString(36).substr(2, 9),
+        level: building.level + 1
+      };
+
+      await updatePlayer({
+        resources: updatedResources,
+        buildings: [...buildings, newBuilding]
+      });
+
+      setBuildings(prev => [...prev, newBuilding]);
+      
+      addToast({
+        message: `${building.name} constructed successfully!`,
+        type: 'success'
+      });
+    } catch (error) {
+      addToast({
+        message: 'Failed to construct building',
+        type: 'error'
+      });
+    } finally {
+      setIsConstructing(false);
+    }
+  };
+
+  const upgradeBuilding = async (buildingId: string) => {
+    if (isConstructing) return;
+
+    const building = buildings.find(b => b.id === buildingId);
+    if (!building) return;
+
+    const upgradeCost = {
+      gold: building.upgradeCost.gold * (building.level + 1),
+      materials: building.upgradeCost.materials * (building.level + 1)
+    };
+
+    if (!canAfford(upgradeCost)) {
+      addToast({
+        message: 'Not enough resources to upgrade building!',
+        type: 'warning'
+      });
+      return;
+    }
+
+    setIsConstructing(true);
+    try {
+      const updatedResources = {
+        ...player.resources,
+        gold: player.resources.gold - upgradeCost.gold,
+        materials: player.resources.materials - upgradeCost.materials
+      };
+
+      const updatedBuildings = buildings.map(b => 
+        b.id === buildingId 
+          ? { ...b, level: b.level + 1 }
+          : b
+      );
+
+      await updatePlayer({
+        resources: updatedResources,
+        buildings: updatedBuildings
+      });
+
+      setBuildings(updatedBuildings);
+      
+      addToast({
+        message: `${building.name} upgraded to level ${building.level + 1}!`,
+        type: 'success'
+      });
+    } catch (error) {
+      addToast({
+        message: 'Failed to upgrade building',
+        type: 'error'
+      });
+    } finally {
+      setIsConstructing(false);
+    }
   };
 
   // Animation variants
@@ -144,373 +229,95 @@ const Building = () => {
   };
 
   return (
-    <div className="bg-background min-h-screen p-6 bg-gradient-to-b from-background to-background/95">
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-        className="max-w-7xl mx-auto"
-      >
-        <motion.div
-          variants={itemVariants}
-          className="flex items-center gap-3 mb-8"
-        >
-          <div className="p-3 bg-primary/10 rounded-full">
-            <Construction className="h-8 w-8 text-primary" />
+    <div className="space-y-6">
+      <NeumorphicCard>
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">Buildings</h2>
+            <NeumorphicButton>
+              <Building2 className="h-4 w-4 mr-2" />
+              New Building
+            </NeumorphicButton>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary/80 to-primary bg-clip-text text-transparent">
-              Building Management
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Construct and upgrade buildings to strengthen your kingdom
-            </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {buildings.map((building) => (
+              <div key={building.id} className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    {building.icon}
+                    <div>
+                      <span className="font-medium">{building.name}</span>
+                      <div className="text-sm text-muted-foreground">
+                        Level {building.level}/{building.maxLevel}
+                      </div>
+                    </div>
+                  </div>
+                  <NeumorphicBadge type="info">
+                    {building.production.type}: +{building.production.amount}
+                  </NeumorphicBadge>
+                </div>
+
+                <NeumorphicProgress 
+                  value={(building.level / building.maxLevel) * 100}
+                />
+
+                <p className="text-sm text-muted-foreground">
+                  {building.description}
+                </p>
+
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="font-medium mb-1">Upgrade Cost</div>
+                    <div className="flex items-center gap-2">
+                      <Coins className="h-4 w-4" />
+                      <span>{building.upgradeCost.gold}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-medium mb-1">Upgrade Time</div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      <span>{building.upgradeTime}m</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <NeumorphicButton className="flex-1" onClick={() => upgradeBuilding(building.id)} disabled={isConstructing}>
+                    Upgrade
+                  </NeumorphicButton>
+                  <NeumorphicButton className="flex-1">
+                    Details
+                  </NeumorphicButton>
+                </div>
+              </div>
+            ))}
           </div>
-        </motion.div>
+        </div>
+      </NeumorphicCard>
 
-        <motion.div
-          variants={containerVariants}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
-        >
-          <motion.div variants={itemVariants}>
-            <Card className="border border-primary/20 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-300 shadow-lg shadow-primary/5">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl flex items-center">
-                  <Building2 className="h-5 w-5 mr-2 text-primary" />
-                  Total Buildings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{buildings.length}</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Structures in your kingdom
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <Card className="border border-amber-500/20 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-300 shadow-lg shadow-amber-500/5">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl flex items-center">
-                  <Construction className="h-5 w-5 mr-2 text-amber-500" />
-                  In Construction
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">
-                  {constructionInProgress.length}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Buildings being constructed
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <Card className="border border-blue-500/20 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-300 shadow-lg shadow-blue-500/5">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl flex items-center">
-                  <Hammer className="h-5 w-5 mr-2 text-blue-500" />
-                  Available to Build
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">
-                  {availableBuildings.length}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  New structures to construct
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <Tabs
-            defaultValue="existing"
-            className="w-full bg-card/30 p-6 rounded-lg border border-border/40 shadow-md backdrop-blur-sm"
-          >
-            <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50">
-              <TabsTrigger
-                value="existing"
-                className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-md transition-all duration-300"
-              >
-                <Building2 className="h-4 w-4 mr-2" />
-                Existing Buildings
-              </TabsTrigger>
-              <TabsTrigger
-                value="construction"
-                className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-500 data-[state=active]:shadow-md transition-all duration-300"
-              >
-                <Construction className="h-4 w-4 mr-2" />
-                Construction
-              </TabsTrigger>
-              <TabsTrigger
-                value="new"
-                className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-500 data-[state=active]:shadow-md transition-all duration-300"
-              >
-                <Hammer className="h-4 w-4 mr-2" />
-                New Buildings
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="existing" className="space-y-6">
-              <motion.div
-                variants={containerVariants}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {buildings.map((building) => (
-                  <motion.div
-                    key={building.id}
-                    variants={itemVariants}
-                    whileHover={{ scale: 1.02 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  >
-                    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50 bg-card/80 backdrop-blur-sm h-full">
-                      <CardHeader className="border-b border-border/20 pb-4 bg-muted/30">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-background/50 rounded-full">
-                              {building.icon}
-                            </div>
-                            <div>
-                              <CardTitle className="text-xl">
-                                {building.name}
-                              </CardTitle>
-                              <Badge
-                                variant="outline"
-                                className="mt-1 bg-primary/5"
-                              >
-                                Level {building.level}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-4">
-                        <p className="text-sm mb-4">{building.description}</p>
-
-                        <div className="flex items-center gap-2 mb-4">
-                          <Sparkles className="h-4 w-4 text-amber-400" />
-                          <span className="text-sm font-medium">
-                            {building.benefits}
-                          </span>
-                        </div>
-
-                        <Separator className="my-4 bg-border/50" />
-
-                        <div className="space-y-3 mb-4 p-4 bg-muted/30 rounded-lg border border-border/30">
-                          <div className="flex justify-between text-sm">
-                            <span className="flex items-center">
-                              <Coins className="h-4 w-4 mr-1 text-yellow-500" />
-                              Upgrade Cost:
-                            </span>
-                            <span className="font-medium">
-                              {building.goldCost}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="flex items-center">
-                              <Wheat className="h-4 w-4 mr-1 text-green-500" />
-                              Food Cost:
-                            </span>
-                            <span className="font-medium">
-                              {building.foodCost}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="flex items-center">
-                              <Clock className="h-4 w-4 mr-1" /> Time:
-                            </span>
-                            <span className="font-medium">
-                              {building.timeToUpgrade}
-                            </span>
-                          </div>
-                        </div>
-                        <Button
-                          className="w-full py-5 text-base font-semibold transition-all duration-300 hover:bg-primary/90 hover:shadow-md group"
-                          onClick={() => startUpgrade(building.id)}
-                        >
-                          <ArrowUp className="h-4 w-4 mr-2 group-hover:animate-bounce" />
-                          Upgrade to Level {building.level + 1}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </TabsContent>
-
-            <TabsContent value="construction" className="space-y-6">
-              {constructionInProgress.length > 0 ? (
-                <motion.div variants={containerVariants} className="space-y-6">
-                  <motion.h2
-                    variants={itemVariants}
-                    className="text-xl font-semibold flex items-center gap-2"
-                  >
-                    <Construction className="h-5 w-5 text-amber-500" />
-                    In Progress
-                  </motion.h2>
-                  {constructionInProgress.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      variants={itemVariants}
-                      whileHover={{ scale: 1.01 }}
-                    >
-                      <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 border-amber-500/30 bg-card/80 backdrop-blur-sm">
-                        <CardContent className="pt-6">
-                          <div className="flex justify-between items-center mb-4">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-amber-500/10 rounded-full">
-                                {item.icon}
-                              </div>
-                              <span className="text-lg font-medium">
-                                {item.buildingName}
-                              </span>
-                            </div>
-                            <Badge
-                              variant="outline"
-                              className="text-amber-500 border-amber-500 bg-amber-500/10"
-                            >
-                              {item.progress}%
-                            </Badge>
-                          </div>
-                          <div className="relative mb-2">
-                            <Progress value={item.progress} className="h-2" />
-                            <motion.div
-                              className="absolute top-0 left-0 h-2 w-2 bg-amber-500 rounded-full"
-                              animate={{
-                                left: `${item.progress}%`,
-                                transition: {
-                                  duration: 1.5,
-                                  repeat: Infinity,
-                                  repeatType: "reverse",
-                                },
-                              }}
-                            />
-                          </div>
-                          <p className="text-sm text-muted-foreground flex items-center gap-1 mt-3">
-                            <Clock className="h-4 w-4" />
-                            Completes in {item.timeRemaining}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              ) : (
-                <motion.div
-                  variants={itemVariants}
-                  className="text-center py-16 bg-muted/20 rounded-lg border border-border/30"
-                >
-                  <Building2 className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
-                  <h3 className="mt-4 text-xl font-medium">
-                    No Construction in Progress
-                  </h3>
-                  <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-                    Start a new building project from the New Buildings tab to
-                    expand your kingdom.
-                  </p>
-                </motion.div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="new" className="space-y-6">
-              <motion.div
-                variants={containerVariants}
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
-              >
-                {availableBuildings.map((building) => (
-                  <motion.div
-                    key={building.id}
-                    variants={itemVariants}
-                    whileHover={{ scale: 1.02 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  >
-                    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 border-blue-500/30 bg-card/80 backdrop-blur-sm h-full">
-                      <CardHeader className="border-b border-border/20 pb-4 bg-muted/30">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-500/10 rounded-full">
-                              {building.icon}
-                            </div>
-                            <CardTitle className="text-xl">
-                              {building.name}
-                            </CardTitle>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-4">
-                        <p className="text-sm mb-4">{building.description}</p>
-
-                        <div className="flex items-center gap-2 mb-4">
-                          <Sparkles className="h-4 w-4 text-blue-400" />
-                          <span className="text-sm font-medium">
-                            {building.benefits}
-                          </span>
-                        </div>
-
-                        <Separator className="my-4 bg-border/50" />
-
-                        <div className="space-y-3 mb-4 p-4 bg-muted/30 rounded-lg border border-border/30">
-                          <div className="flex justify-between text-sm">
-                            <span className="flex items-center">
-                              <Coins className="h-4 w-4 mr-1 text-yellow-500" />
-                              Cost:
-                            </span>
-                            <span className="font-medium">
-                              {building.goldCost}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="flex items-center">
-                              <Wheat className="h-4 w-4 mr-1 text-green-500" />
-                              Food Cost:
-                            </span>
-                            <span className="font-medium">
-                              {building.foodCost}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="flex items-center">
-                              <Clock className="h-4 w-4 mr-1" /> Time:
-                            </span>
-                            <span className="font-medium">
-                              {building.timeToConstruct}
-                            </span>
-                          </div>
-                          <Separator className="my-2" />
-                          <div className="text-sm">
-                            <span className="font-medium">Requirements:</span>{" "}
-                            <Badge
-                              variant="outline"
-                              className="ml-1 bg-blue-500/5 text-blue-500 border-blue-500/30"
-                            >
-                              {building.requirements}
-                            </Badge>
-                          </div>
-                        </div>
-                        <Button
-                          className="w-full py-5 text-base font-semibold transition-all duration-300 bg-blue-600 hover:bg-blue-700 hover:shadow-md group"
-                          onClick={() => startConstruction(building.id)}
-                        >
-                          <Construction className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
-                          Construct
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </TabsContent>
-          </Tabs>
-        </motion.div>
-      </motion.div>
+      <NeumorphicCard>
+        <div className="p-6">
+          <h3 className="text-xl font-bold mb-4">Building Bonuses</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <NeumorphicBadge type="success">
+              Construction Speed +15%
+            </NeumorphicBadge>
+            <NeumorphicBadge type="info">
+              Resource Production +20%
+            </NeumorphicBadge>
+            <NeumorphicBadge type="warning">
+              Storage Capacity +25%
+            </NeumorphicBadge>
+            <NeumorphicBadge type="error">
+              Building Defense +30%
+            </NeumorphicBadge>
+          </div>
+        </div>
+      </NeumorphicCard>
     </div>
   );
 };
 
-export default Building;
+export default BuildingManagement;

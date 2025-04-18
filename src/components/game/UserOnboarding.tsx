@@ -1,197 +1,249 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "../ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { Progress } from "../ui/progress";
-import { motion } from "framer-motion";
-import RaceSelection from "./RaceSelection";
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowRight, 
+  ArrowLeft, 
+  Check, 
+  Crown,
+  MapPin,
+  Users,
+  Building2,
+  Shield,
+  Sword,
+  Zap
+} from 'lucide-react';
+import { NeumorphicCard, NeumorphicButton, NeumorphicBadge, NeumorphicInput } from '@/styles/components';
+import RaceSelectionDropdown from './RaceSelectionDropdown';
 
-const UserOnboarding = () => {
-  const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const totalSteps = 3;
+interface KingdomSetup {
+  name: string;
+  capital: string;
+  race: any;
+  startingResources: {
+    gold: number;
+    food: number;
+    population: number;
+    influence: number;
+  };
+}
 
-  const handleNext = () => {
-    if (step < totalSteps) {
-      setStep(step + 1);
-    } else {
-      // Check if we're in a storyboard environment
-      const isStoryboard = window.location.pathname.includes("/tempobook/");
-      if (isStoryboard) {
-        console.log("In storyboard environment, not navigating");
-        // Just show success state in storyboard
-      } else {
-        navigate("/setup-kingdom");
-      }
+const UserOnboarding: React.FC = () => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [kingdomSetup, setKingdomSetup] = useState<KingdomSetup>({
+    name: '',
+    capital: '',
+    race: null,
+    startingResources: {
+      gold: 1000,
+      food: 1000,
+      population: 100,
+      influence: 100
     }
+  });
+
+  const handleInputChange = (field: keyof KingdomSetup, value: string) => {
+    setKingdomSetup(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1);
-    }
+  const handleRaceSelect = (race: any) => {
+    setKingdomSetup(prev => ({
+      ...prev,
+      race
+    }));
   };
 
-  const handleSkip = () => {
-    // Check if we're in a storyboard environment
-    const isStoryboard = window.location.pathname.includes("/tempobook/");
-    if (isStoryboard) {
-      console.log("In storyboard environment, not navigating");
-      // Just show success state in storyboard
-    } else {
-      navigate("/setup-kingdom");
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <h2 className="text-2xl font-bold">Selamat Datang di Kurusetra</h2>
+            <p className="text-muted-foreground">
+              Mari kita mulai perjalananmu untuk membangun kerajaan yang kuat dan makmur.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Nama Kerajaan</label>
+                <NeumorphicInput
+                  value={kingdomSetup.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="Masukkan nama kerajaanmu"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Ibu Kota</label>
+                <NeumorphicInput
+                  value={kingdomSetup.capital}
+                  onChange={(e) => handleInputChange('capital', e.target.value)}
+                  placeholder="Masukkan nama ibu kota"
+                />
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 2:
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <h2 className="text-2xl font-bold">Pilih Bangsa</h2>
+            <p className="text-muted-foreground">
+              Setiap bangsa memiliki keunikan dan keunggulan tersendiri. Pilihlah dengan bijak.
+            </p>
+            <RaceSelectionDropdown
+              onSelect={handleRaceSelect}
+              selectedRace={kingdomSetup.race}
+            />
+            {kingdomSetup.race && (
+              <NeumorphicCard className="p-4 mt-4">
+                <h3 className="font-semibold mb-2">Bonus Awal</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <NeumorphicBadge type="info">
+                    <Crown className="h-3 w-3 mr-1" />
+                    {kingdomSetup.race.startingBonus}
+                  </NeumorphicBadge>
+                  <NeumorphicBadge type="info">
+                    <Sword className="h-3 w-3 mr-1" />
+                    Militer +{kingdomSetup.race.bonuses.military}%
+                  </NeumorphicBadge>
+                  <NeumorphicBadge type="info">
+                    <Shield className="h-3 w-3 mr-1" />
+                    Pertahanan +{kingdomSetup.race.bonuses.defense}%
+                  </NeumorphicBadge>
+                  <NeumorphicBadge type="info">
+                    <Zap className="h-3 w-3 mr-1" />
+                    Produksi +{kingdomSetup.race.bonuses.production}%
+                  </NeumorphicBadge>
+                </div>
+              </NeumorphicCard>
+            )}
+          </motion.div>
+        );
+
+      case 3:
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <h2 className="text-2xl font-bold">Sumber Daya Awal</h2>
+            <p className="text-muted-foreground">
+              Berikut adalah sumber daya yang akan kamu miliki di awal permainan.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <NeumorphicCard className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown className="h-4 w-4" />
+                  <h3 className="font-semibold">Emas</h3>
+                </div>
+                <p className="text-2xl font-bold">{kingdomSetup.startingResources.gold}</p>
+              </NeumorphicCard>
+              <NeumorphicCard className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Building2 className="h-4 w-4" />
+                  <h3 className="font-semibold">Makanan</h3>
+                </div>
+                <p className="text-2xl font-bold">{kingdomSetup.startingResources.food}</p>
+              </NeumorphicCard>
+              <NeumorphicCard className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="h-4 w-4" />
+                  <h3 className="font-semibold">Populasi</h3>
+                </div>
+                <p className="text-2xl font-bold">{kingdomSetup.startingResources.population}</p>
+              </NeumorphicCard>
+              <NeumorphicCard className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin className="h-4 w-4" />
+                  <h3 className="font-semibold">Pengaruh</h3>
+                </div>
+                <p className="text-2xl font-bold">{kingdomSetup.startingResources.influence}</p>
+              </NeumorphicCard>
+            </div>
+          </motion.div>
+        );
+
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
-      <Card className="w-full max-w-4xl bg-white/10 backdrop-blur-md border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-2xl text-white">
-            Welcome to Kurusetra
-          </CardTitle>
-          <CardDescription className="text-slate-300">
-            Let's get you started on your journey to build a mighty kingdom
-          </CardDescription>
-          <div className="mt-2">
-            <Progress
-              value={(step / totalSteps) * 100}
-              className="h-2 bg-slate-700"
-            />
-            <p className="text-sm text-slate-400 mt-1">
-              Step {step} of {totalSteps}
-            </p>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {step === 1 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-4"
+    <div className="max-w-2xl mx-auto p-6">
+      <NeumorphicCard className="p-8">
+        <div className="flex justify-between mb-8">
+          {[1, 2, 3].map((step) => (
+            <div
+              key={step}
+              className={`flex items-center ${
+                step < 3 ? 'flex-1' : ''
+              }`}
             >
-              <h3 className="text-xl text-white">The World of Kurusetra</h3>
-              <p className="text-slate-300">
-                Kurusetra is a land of ancient kingdoms, powerful alliances, and
-                strategic warfare. As a ruler, you will build your civilization,
-                train armies, and engage in battles with other kingdoms.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-                  <h4 className="text-white font-medium">Build Your Kingdom</h4>
-                  <p className="text-sm text-slate-400 mt-1">
-                    Construct buildings, manage resources, and expand your
-                    territory
-                  </p>
-                </div>
-                <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-                  <h4 className="text-white font-medium">Form Alliances</h4>
-                  <p className="text-sm text-slate-400 mt-1">
-                    Join a Dewan Raja with up to 15 other kingdoms to plan
-                    strategies together
-                  </p>
-                </div>
-                <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-                  <h4 className="text-white font-medium">Train Your Army</h4>
-                  <p className="text-sm text-slate-400 mt-1">
-                    Build military units with unique abilities and strengths
-                  </p>
-                </div>
-                <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-                  <h4 className="text-white font-medium">Engage in Warfare</h4>
-                  <p className="text-sm text-slate-400 mt-1">
-                    Plan strategic attacks and defend your kingdom from enemies
-                  </p>
-                </div>
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  currentStep >= step
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {currentStep > step ? <Check className="h-4 w-4" /> : step}
               </div>
-            </motion.div>
-          )}
+              {step < 3 && (
+                <div
+                  className={`flex-1 h-1 mx-2 ${
+                    currentStep > step ? 'bg-primary' : 'bg-muted'
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
 
-          {step === 2 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-4"
-            >
-              <h3 className="text-xl text-white">Choose Your Race</h3>
-              <p className="text-slate-300 mb-4">
-                Each race in Kurusetra has unique abilities and advantages.
-                Choose wisely as this will affect your gameplay strategy.
-              </p>
-              <RaceSelection />
-            </motion.div>
-          )}
+        <AnimatePresence mode="wait">
+          {renderStep()}
+        </AnimatePresence>
 
-          {step === 3 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-4"
-            >
-              <h3 className="text-xl text-white">Game Mechanics</h3>
-              <p className="text-slate-300">
-                Kurusetra operates in real-time. Your kingdom continues to
-                develop even when you're offline. Here are some key mechanics to
-                understand:
-              </p>
-              <ul className="space-y-2 text-slate-300 list-disc pl-5">
-                <li>
-                  <span className="font-medium">Real-time Progression:</span>{" "}
-                  Buildings, training, and research take real-time hours to
-                  complete
-                </li>
-                <li>
-                  <span className="font-medium">Resource Management:</span>{" "}
-                  Balance gold, food, and other resources to sustain your
-                  kingdom
-                </li>
-                <li>
-                  <span className="font-medium">Alliance Coordination:</span>{" "}
-                  Communicate with alliance members to coordinate attacks and
-                  defense
-                </li>
-                <li>
-                  <span className="font-medium">Strategic Planning:</span> Plan
-                  your actions carefully as they have long-term consequences
-                </li>
-              </ul>
-            </motion.div>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-between border-t border-slate-700 pt-4">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={step === 1}
-            className="border-slate-600 text-slate-300 hover:bg-slate-700"
+        <div className="flex justify-between mt-8">
+          <NeumorphicButton
+            onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
+            disabled={currentStep === 1}
           >
-            Back
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleSkip}
-            className="border-slate-600 text-slate-300 hover:bg-slate-700"
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Sebelumnya
+          </NeumorphicButton>
+          <NeumorphicButton
+            onClick={() => {
+              if (currentStep < 3) {
+                setCurrentStep(prev => prev + 1);
+              } else {
+                // Handle completion
+                console.log('Setup completed:', kingdomSetup);
+              }
+            }}
+            disabled={
+              (currentStep === 1 && (!kingdomSetup.name || !kingdomSetup.capital)) ||
+              (currentStep === 2 && !kingdomSetup.race)
+            }
           >
-            Skip Tutorial
-          </Button>
-          <Button
-            onClick={handleNext}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white"
-          >
-            {step === totalSteps ? "Start Your Journey" : "Next"}
-          </Button>
-        </CardFooter>
-      </Card>
+            {currentStep === 3 ? 'Mulai Permainan' : 'Selanjutnya'}
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </NeumorphicButton>
+        </div>
+      </NeumorphicCard>
     </div>
   );
 };

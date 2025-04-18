@@ -52,7 +52,32 @@ import {
   Check,
   Loader2,
   MapPin,
+  Scale,
+  ArrowRight,
+  Droplet,
+  Fish,
+  Leaf,
 } from "lucide-react";
+
+interface RaceStats {
+  strength: number;
+  magic: number;
+  speed: number;
+  defense: number;
+  intelligence: number;
+}
+
+interface Race {
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+  textColor: string;
+  buttonColor: string;
+  specialty: string;
+  startingBonus: string;
+  stats: RaceStats;
+}
 
 export default function Register() {
   // Account registration states
@@ -78,39 +103,123 @@ export default function Register() {
     {
       value: "aries",
       label: "Aries",
-      description: "+10% Military training speed",
+      description: "The Ram",
+      bonus: "+10% Military training speed",
+      element: "Fire",
+      icon: <Sword className="h-4 w-4" />,
+      color: "bg-red-100 border-red-300",
+      textColor: "text-red-800"
     },
     {
       value: "taurus",
       label: "Taurus",
-      description: "+10% Resource production",
+      description: "The Bull",
+      bonus: "+10% Resource production",
+      element: "Earth",
+      icon: <Mountain className="h-4 w-4" />,
+      color: "bg-green-100 border-green-300",
+      textColor: "text-green-800"
     },
-    { value: "gemini", label: "Gemini", description: "+10% Research speed" },
-    { value: "cancer", label: "Cancer", description: "+10% Defense strength" },
-    { value: "leo", label: "Leo", description: "+10% Attack strength" },
-    { value: "virgo", label: "Virgo", description: "+10% Building speed" },
+    {
+      value: "gemini",
+      label: "Gemini",
+      description: "The Twins",
+      bonus: "+10% Research speed",
+      element: "Air",
+      icon: <Wand className="h-4 w-4" />,
+      color: "bg-yellow-100 border-yellow-300",
+      textColor: "text-yellow-800"
+    },
+    {
+      value: "cancer",
+      label: "Cancer",
+      description: "The Crab",
+      bonus: "+10% Defense strength",
+      element: "Water",
+      icon: <Shield className="h-4 w-4" />,
+      color: "bg-blue-100 border-blue-300",
+      textColor: "text-blue-800"
+    },
+    {
+      value: "leo",
+      label: "Leo",
+      description: "The Lion",
+      bonus: "+10% Attack strength",
+      element: "Fire",
+      icon: <Crown className="h-4 w-4" />,
+      color: "bg-orange-100 border-orange-300",
+      textColor: "text-orange-800"
+    },
+    {
+      value: "virgo",
+      label: "Virgo",
+      description: "The Maiden",
+      bonus: "+10% Building speed",
+      element: "Earth",
+      icon: <Landmark className="h-4 w-4" />,
+      color: "bg-emerald-100 border-emerald-300",
+      textColor: "text-emerald-800"
+    },
     {
       value: "libra",
       label: "Libra",
-      description: "+10% Diplomatic influence",
+      description: "The Scales",
+      bonus: "+10% Diplomatic influence",
+      element: "Air",
+      icon: <Scale className="h-4 w-4" />,
+      color: "bg-pink-100 border-pink-300",
+      textColor: "text-pink-800"
     },
     {
       value: "scorpio",
       label: "Scorpio",
-      description: "+10% Spy effectiveness",
+      description: "The Scorpion",
+      bonus: "+10% Spy effectiveness",
+      element: "Water",
+      icon: <Skull className="h-4 w-4" />,
+      color: "bg-purple-100 border-purple-300",
+      textColor: "text-purple-800"
     },
     {
       value: "sagittarius",
       label: "Sagittarius",
-      description: "+10% Ranged attack",
+      description: "The Archer",
+      bonus: "+10% Ranged attack",
+      element: "Fire",
+      icon: <ArrowRight className="h-4 w-4" />,
+      color: "bg-amber-100 border-amber-300",
+      textColor: "text-amber-800"
     },
     {
       value: "capricorn",
       label: "Capricorn",
-      description: "+10% Resource capacity",
+      description: "The Goat",
+      bonus: "+10% Resource capacity",
+      element: "Earth",
+      icon: <Mountain className="h-4 w-4" />,
+      color: "bg-stone-100 border-stone-300",
+      textColor: "text-stone-800"
     },
-    { value: "aquarius", label: "Aquarius", description: "+10% Magic power" },
-    { value: "pisces", label: "Pisces", description: "+10% Healing rate" },
+    {
+      value: "aquarius",
+      label: "Aquarius",
+      description: "The Water Bearer",
+      bonus: "+10% Magic power",
+      element: "Air",
+      icon: <Droplet className="h-4 w-4" />,
+      color: "bg-cyan-100 border-cyan-300",
+      textColor: "text-cyan-800"
+    },
+    {
+      value: "pisces",
+      label: "Pisces",
+      description: "The Fish",
+      bonus: "+10% Healing rate",
+      element: "Water",
+      icon: <Fish className="h-4 w-4" />,
+      color: "bg-indigo-100 border-indigo-300",
+      textColor: "text-indigo-800"
+    }
   ]);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{
@@ -121,96 +230,144 @@ export default function Register() {
   }>({});
 
   // Define races object for kingdom setup
-  const races = {
-    ksatriya: {
+  const races: Race[] = [
+    {
       name: "Ksatriya",
-      description:
-        "The most intelligent beings who live prosperously in the lowlands. They are the most stable race in the Kurusetra universe.",
-      icon: <Crown className="h-4 w-4" />,
-      color: "bg-amber-100 border-amber-300",
-      textColor: "text-amber-800",
-      buttonColor: "bg-amber-600 hover:bg-amber-700",
-      specialty: "Diplomacy and Trade",
-      startingBonus: "+15% Gold production, +10% Diplomatic influence",
-    },
-    wanamarta: {
-      name: "Wanamarta",
-      description:
-        "Mystical beings who live in dense forests filled with magical auras. They possess extraordinary magical abilities.",
-      icon: <Wand className="h-4 w-4" />,
-      color: "bg-emerald-100 border-emerald-300",
-      textColor: "text-emerald-800",
-      buttonColor: "bg-emerald-600 hover:bg-emerald-700",
-      specialty: "Magic and Research",
-      startingBonus: "+20% Magic power, +15% Research speed",
-    },
-    wirabumi: {
-      name: "Wirabumi",
-      description:
-        "Hard-working beings who live in hidden areas, caves, and underground. Known for their industrious nature.",
-      icon: <Mountain className="h-4 w-4" />,
-      color: "bg-stone-100 border-stone-300",
-      textColor: "text-stone-800",
-      buttonColor: "bg-stone-600 hover:bg-stone-700",
-      specialty: "Mining and Construction",
-      startingBonus: "+25% Resource gathering, +15% Building speed",
-    },
-    jatayu: {
-      name: "Jatayu",
-      description:
-        "Flying beings who live in highlands. They possess incredible aggressive attack capabilities and unmatched speed.",
-      icon: <Bird className="h-4 w-4" />,
-      color: "bg-sky-100 border-sky-300",
-      textColor: "text-sky-800",
-      buttonColor: "bg-sky-600 hover:bg-sky-700",
-      specialty: "Speed and Reconnaissance",
-      startingBonus: "+30% Movement speed, +20% Vision range",
-    },
-    kurawa: {
-      name: "Kurawa",
-      description:
-        "The most cunning lowland beings in the Kurusetra universe. Masters of secret operations and deception.",
-      icon: <Skull className="h-4 w-4" />,
-      color: "bg-purple-100 border-purple-300",
-      textColor: "text-purple-800",
-      buttonColor: "bg-purple-600 hover:bg-purple-700",
-      specialty: "Espionage and Sabotage",
-      startingBonus: "+25% Spy effectiveness, +15% Enemy detection",
-    },
-    tibrasara: {
-      name: "Tibrasara",
-      description:
-        "Mysterious beings who live in dark forests with unparalleled archery skills. Their killing instinct is feared throughout the realm.",
-      icon: <Shield className="h-4 w-4" />,
-      color: "bg-indigo-100 border-indigo-300",
-      textColor: "text-indigo-800",
-      buttonColor: "bg-indigo-600 hover:bg-indigo-700",
-      specialty: "Ranged Combat and Stealth",
-      startingBonus: "+20% Ranged damage, +15% Stealth capability",
-    },
-    raksasa: {
-      name: "Raksasa",
-      description:
-        "Enormous and terrifying beings who inhabit steep rocky hills. Their army strength is unmatched in the realm.",
-      icon: <Sword className="h-4 w-4" />,
-      color: "bg-red-100 border-red-300",
+      description: "Ksatria yang terampil dalam pertempuran jarak dekat",
+      icon: <Sword className="w-6 h-6" />,
+      color: "bg-red-100",
       textColor: "text-red-800",
-      buttonColor: "bg-red-600 hover:bg-red-700",
-      specialty: "Brute Force and Intimidation",
+      buttonColor: "bg-red-500 hover:bg-red-600",
+      specialty: "Pertempuran Jarak Dekat",
+      startingBonus: "+5 Strength",
+      stats: {
+        strength: 8,
+        magic: 2,
+        speed: 4,
+        defense: 6,
+        intelligence: 3
+      }
+    },
+    {
+      name: "Wanamarta",
+      description: "Ahli sihir yang menguasai elemen alam",
+      icon: <Wand className="w-6 h-6" />,
+      color: "bg-blue-100",
+      textColor: "text-blue-800",
+      buttonColor: "bg-blue-500 hover:bg-blue-600",
+      specialty: "Sihir dan Elemen",
+      startingBonus: "+5 Magic",
+      stats: {
+        strength: 2,
+        magic: 8,
+        speed: 3,
+        defense: 4,
+        intelligence: 6
+      }
+    },
+    {
+      name: "Wirabumi",
+      description: "Penjaga hutan yang terampil dalam bertahan hidup",
+      icon: <Leaf className="w-6 h-6" />,
+      color: "bg-green-100",
+      textColor: "text-green-800",
+      buttonColor: "bg-green-500 hover:bg-green-600",
+      specialty: "Bertahan Hidup",
+      startingBonus: "+5 Defense",
+      stats: {
+        strength: 4,
+        magic: 3,
+        speed: 5,
+        defense: 8,
+        intelligence: 4
+      }
+    },
+    {
+      name: "Jatayu",
+      description: "Pengembara langit yang cepat dan lincah",
+      icon: <Bird className="w-6 h-6" />,
+      color: "bg-yellow-100",
+      textColor: "text-yellow-800",
+      buttonColor: "bg-yellow-500 hover:bg-yellow-600",
+      specialty: "Kecepatan dan Kelincahan",
+      startingBonus: "+5 Speed",
+      stats: {
+        strength: 3,
+        magic: 4,
+        speed: 8,
+        defense: 3,
+        intelligence: 5
+      }
+    },
+    {
+      name: "Kurawa",
+      description: "Penguasa kegelapan yang ahli dalam spionase",
+      icon: <Droplet className="w-6 h-6" />,
+      color: "bg-purple-100",
+      textColor: "text-purple-800",
+      buttonColor: "bg-purple-500 hover:bg-purple-600",
+      specialty: "Spionase dan Intelijen",
+      startingBonus: "+25% Spy effectiveness, +15% Enemy detection",
+      stats: {
+        strength: 3,
+        magic: 5,
+        speed: 6,
+        defense: 4,
+        intelligence: 7
+      }
+    },
+    {
+      name: "Tibrasara",
+      description: "Pemanah legendaris yang ahli dalam pertempuran jarak jauh",
+      icon: <Fish className="w-6 h-6" />,
+      color: "bg-cyan-100",
+      textColor: "text-cyan-800",
+      buttonColor: "bg-cyan-500 hover:bg-cyan-600",
+      specialty: "Pertempuran Jarak Jauh",
+      startingBonus: "+20% Ranged damage, +15% Stealth capability",
+      stats: {
+        strength: 4,
+        magic: 3,
+        speed: 7,
+        defense: 5,
+        intelligence: 6
+      }
+    },
+    {
+      name: "Raksasa",
+      description: "Ras raksasa yang memiliki kekuatan fisik luar biasa",
+      icon: <Sword className="w-6 h-6" />,
+      color: "bg-orange-100",
+      textColor: "text-orange-800",
+      buttonColor: "bg-orange-500 hover:bg-orange-600",
+      specialty: "Kekuatan Fisik",
       startingBonus: "+30% Army strength, +20% Enemy morale reduction",
+      stats: {
+        strength: 9,
+        magic: 2,
+        speed: 3,
+        defense: 7,
+        intelligence: 3
+      }
     },
-    dedemit: {
+    {
       name: "Dedemit",
-      description:
-        "Spectral beings who exist in the realm of wandering spirits. They require no food to survive and their armies never perish in battle.",
-      icon: <Ghost className="h-4 w-4" />,
-      color: "bg-slate-100 border-slate-300",
-      textColor: "text-slate-800",
-      buttonColor: "bg-slate-600 hover:bg-slate-700",
-      specialty: "Immortality and Spirit Magic",
+      description: "Makhluk mistis yang hidup di antara dunia",
+      icon: <Wand className="w-6 h-6" />,
+      color: "bg-gray-100",
+      textColor: "text-gray-800",
+      buttonColor: "bg-gray-500 hover:bg-gray-600",
+      specialty: "Mistisisme",
       startingBonus: "-25% Food consumption, +20% Army revival rate",
+      stats: {
+        strength: 2,
+        magic: 7,
+        speed: 5,
+        defense: 4,
+        intelligence: 7
+      }
     },
-  };
+  ];
 
   const { signUp, updateUserProfile } = useAuth();
   const navigate = useNavigate();
@@ -221,8 +378,8 @@ export default function Register() {
     const raceToCheck = raceId || selectedRace;
 
     // Check if the race exists in our races object
-    return raceToCheck && races[raceToCheck as keyof typeof races]
-      ? races[raceToCheck as keyof typeof races]
+    return raceToCheck && races.find(race => race.name === raceToCheck)
+      ? races.find(race => race.name === raceToCheck)
       : {
           name: "Unknown",
           description: "Select a race to see details.",
@@ -707,69 +864,85 @@ export default function Register() {
                   transition={{ duration: 0.3 }}
                   className="space-y-6"
                 >
-                  {/* Race Selection Section with improved styling */}
+                  {/* Race Selection Section */}
                   <div className="space-y-3">
-                    <Label
-                      htmlFor="race"
-                      className="flex items-center gap-2 text-base font-semibold"
-                    >
+                    <Label className="flex items-center gap-2 text-base font-semibold">
                       <Crown className="h-5 w-5" />
                       Choose Your Race
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      Select the race that will define your kingdom's strengths
-                      and culture
+                      Select the race that will define your kingdom's strengths and culture
                     </p>
-                    <div className="bg-accent/20 rounded-lg p-4 shadow-neuro-flat">
-                      <RaceSelectionDropdown
-                        onSelectRace={handleRaceSelection}
-                        selectedRace={selectedRace}
-                      />
-                    </div>
-
-                    {/* Race details card - only shown when a race is selected */}
-                    {selectedRace && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className={`mt-2 p-3 rounded-lg ${raceDetails.color} border border-${raceDetails.color.split("-")[1]}-300 shadow-neuro-flat`}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <div
-                            className={`p-1.5 rounded-md bg-${raceDetails.color.split("-")[1]}-200`}
-                          >
-                            {raceDetails.icon}
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      {races.map((race) => (
+                        <motion.div
+                          key={race.name}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                            selectedRace === race.name ? `${race.color} ${race.textColor} border-2 border-${race.textColor}` : "bg-white border-gray-200"
+                          }`}
+                          onClick={() => setSelectedRace(race.name)}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            {race.icon}
+                            <h3 className="font-semibold">{race.name}</h3>
                           </div>
-                          <h4
-                            className={`font-medium ${raceDetails.textColor}`}
-                          >
-                            {raceDetails.name}
-                          </h4>
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-1">
-                          Specialty: {raceDetails.specialty}
-                        </p>
-                        <p className="text-xs font-medium">
-                          {raceDetails.startingBonus}
-                        </p>
-                      </motion.div>
-                    )}
+                          <p className="text-sm text-gray-600 mb-2">{race.description}</p>
+                          <div className="mb-2">
+                            <span className="text-xs font-medium text-gray-500">Specialty:</span>
+                            <p className="text-sm">{race.specialty}</p>
+                          </div>
+                          <div className="mb-2">
+                            <span className="text-xs font-medium text-gray-500">Starting Bonus:</span>
+                            <p className="text-sm">{race.startingBonus}</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                              <span className="font-medium">Strength:</span>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${(race.stats.strength / 5) * 100}%` }}></div>
+                              </div>
+                            </div>
+                            <div>
+                              <span className="font-medium">Magic:</span>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="bg-purple-600 h-2 rounded-full" style={{ width: `${(race.stats.magic / 5) * 100}%` }}></div>
+                              </div>
+                            </div>
+                            <div>
+                              <span className="font-medium">Speed:</span>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="bg-green-600 h-2 rounded-full" style={{ width: `${(race.stats.speed / 5) * 100}%` }}></div>
+                              </div>
+                            </div>
+                            <div>
+                              <span className="font-medium">Defense:</span>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="bg-red-600 h-2 rounded-full" style={{ width: `${(race.stats.defense / 5) * 100}%` }}></div>
+                              </div>
+                            </div>
+                            <div>
+                              <span className="font-medium">Intelligence:</span>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="bg-yellow-600 h-2 rounded-full" style={{ width: `${(race.stats.intelligence / 5) * 100}%` }}></div>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Kingdom Name Section with improved styling */}
-                  <div className="space-y-3 mt-2">
-                    <Label
-                      htmlFor="kingdomName"
-                      className="flex items-center gap-2 text-base font-semibold"
-                    >
+                  {/* Kingdom Name Section */}
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2 text-base font-semibold">
                       <Landmark className="h-5 w-5" />
                       Kingdom Name
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      Choose a name that reflects the glory of your{" "}
-                      {selectedRace ? raceDetails.name : "kingdom's"}{" "}
-                      civilization
+                      Choose a name that reflects the glory of your {selectedRace ? races.find(race => race.name === selectedRace)?.name : "kingdom's"} civilization
                     </p>
                     <div className="relative">
                       <Input
@@ -781,7 +954,7 @@ export default function Register() {
                         onBlur={() => setFocusedField(null)}
                         required
                         maxLength={30}
-                        className={`border-2 focus:border-2 focus:ring-0 focus:ring-offset-0 ${fieldErrors.kingdomName ? "border-red-300 shadow-neuro-concave-error" : focusedField === "kingdomName" ? `border-${selectedRace ? raceDetails.buttonColor.split("-")[1] : "primary"}-400 shadow-neuro-concave-focus` : "shadow-neuro-concave"} h-12 px-4 transition-all duration-200 text-base`}
+                        className={`focus:border-2 focus:ring-0 focus:ring-offset-0 ${fieldErrors.kingdomName ? "border-red-300 shadow-neuro-concave-error" : focusedField === "kingdomName" ? `border-${selectedRace ? races.find(race => race.name === selectedRace)?.textColor : "primary"}-400 shadow-neuro-concave-focus` : "shadow-neuro-concave"} h-12 px-4 transition-all duration-200 text-base`}
                       />
 
                       {/* Validation icon */}
@@ -811,31 +984,6 @@ export default function Register() {
                           </motion.div>
                         )}
                       </AnimatePresence>
-                    </div>
-
-                    {/* Field error message */}
-                    <AnimatePresence>
-                      {fieldErrors.kingdomName && (
-                        <motion.p
-                          className="text-xs text-red-500 mt-1 flex items-center gap-1"
-                          initial="initial"
-                          animate="animate"
-                          exit="exit"
-                          variants={validationVariants}
-                        >
-                          <AlertCircle className="h-3 w-3" />
-                          {fieldErrors.kingdomName}
-                        </motion.p>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Character count */}
-                    <div className="flex justify-end">
-                      <span
-                        className={`text-xs ${kingdomName.length > 25 ? "text-amber-500" : "text-muted-foreground"}`}
-                      >
-                        {kingdomName.length}/30
-                      </span>
                     </div>
                   </div>
                 </motion.div>
@@ -867,7 +1015,7 @@ export default function Register() {
                         onChange={(e) => setKingdomDescription(e.target.value)}
                         onFocus={() => setFocusedField("kingdomDescription")}
                         onBlur={() => setFocusedField(null)}
-                        className={`min-h-[120px] border-2 focus:border-2 focus:ring-0 focus:ring-offset-0 ${fieldErrors.kingdomDescription ? "border-red-300 shadow-neuro-concave-error" : focusedField === "kingdomDescription" ? `border-${selectedRace ? raceDetails.buttonColor.split("-")[1] : "primary"}-400 shadow-neuro-concave-focus` : "shadow-neuro-concave"} transition-all duration-200`}
+                        className={`min-h-[120px] focus:border-2 focus:ring-0 focus:ring-offset-0 ${fieldErrors.kingdomDescription ? "border-red-300 shadow-neuro-concave-error" : focusedField === "kingdomDescription" ? `border-${selectedRace ? races.find(race => race.name === selectedRace)?.textColor : "primary"}-400 shadow-neuro-concave-focus` : "shadow-neuro-concave"} transition-all duration-200`}
                       />
 
                       {/* Validation icon */}
@@ -916,7 +1064,7 @@ export default function Register() {
 
                     <p className="text-xs text-muted-foreground mt-1">
                       Share the history and culture of your{" "}
-                      {selectedRace ? raceDetails.name : ""} kingdom (optional)
+                      {selectedRace ? races.find(race => race.name === selectedRace)?.name : ""} kingdom (optional)
                     </p>
 
                     {/* Character count */}
@@ -937,7 +1085,7 @@ export default function Register() {
                   exit="exit"
                   variants={pageVariants}
                   transition={{ duration: 0.3 }}
-                  className="space-y-4"
+                  className="space-y-6"
                 >
                   <div className="space-y-2">
                     <Label
@@ -956,7 +1104,7 @@ export default function Register() {
                         onFocus={() => setFocusedField("kingdomCapital")}
                         onBlur={() => setFocusedField(null)}
                         maxLength={30}
-                        className={`border-2 focus:border-2 focus:ring-0 focus:ring-offset-0 ${fieldErrors.kingdomCapital ? "border-red-300 shadow-neuro-concave-error" : focusedField === "kingdomCapital" ? `border-${selectedRace ? raceDetails.buttonColor.split("-")[1] : "primary"}-400 shadow-neuro-concave-focus` : "shadow-neuro-concave"} h-11 px-4 transition-all duration-200`}
+                        className={`focus:border-2 focus:ring-0 focus:ring-offset-0 ${fieldErrors.kingdomCapital ? "border-red-300 shadow-neuro-concave-error" : focusedField === "kingdomCapital" ? `border-${selectedRace ? races.find(race => race.name === selectedRace)?.textColor : "primary"}-400 shadow-neuro-concave-focus` : "shadow-neuro-concave"} h-11 px-4 transition-all duration-200`}
                       />
 
                       {/* Validation icon */}
@@ -1026,7 +1174,7 @@ export default function Register() {
                         onFocus={() => setFocusedField("kingdomMotto")}
                         onBlur={() => setFocusedField(null)}
                         maxLength={50}
-                        className={`border-2 focus:border-2 focus:ring-0 focus:ring-offset-0 ${fieldErrors.kingdomMotto ? "border-red-300 shadow-neuro-concave-error" : focusedField === "kingdomMotto" ? `border-${selectedRace ? raceDetails.buttonColor.split("-")[1] : "primary"}-400 shadow-neuro-concave-focus` : "shadow-neuro-concave"} h-11 px-4 transition-all duration-200`}
+                        className={`focus:border-2 focus:ring-0 focus:ring-offset-0 ${fieldErrors.kingdomMotto ? "border-red-300 shadow-neuro-concave-error" : focusedField === "kingdomMotto" ? `border-${selectedRace ? races.find(race => race.name === selectedRace)?.textColor : "primary"}-400 shadow-neuro-concave-focus` : "shadow-neuro-concave"} h-11 px-4 transition-all duration-200`}
                       />
 
                       {/* Validation icon */}
@@ -1079,55 +1227,53 @@ export default function Register() {
                     </p>
                   </div>
 
-                  <div className="space-y-2 mt-4">
-                    <Label
-                      htmlFor="zodiacSign"
-                      className="flex items-center gap-2 text-base font-medium"
-                    >
-                      <Sparkles className="h-4 w-4" />
+                  {/* Zodiac Selection Section */}
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2 text-base font-semibold">
+                      <Sparkles className="h-5 w-5" />
                       Zodiac Sign
                     </Label>
-                    <Select
-                      value={selectedZodiac}
-                      onValueChange={setSelectedZodiac}
-                    >
-                      <SelectTrigger
-                        className={`border-2 focus:border-2 focus:ring-0 focus:ring-offset-0 ${focusedField === "zodiac" ? `border-${selectedRace ? raceDetails.buttonColor.split("-")[1] : "primary"}-400 shadow-neuro-concave-focus` : "shadow-neuro-concave"} h-11 px-4 transition-all duration-200`}
-                      >
-                        <SelectValue placeholder="Select your zodiac sign" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-80">
-                        <SelectGroup>
-                          <SelectLabel>Zodiac Signs</SelectLabel>
-                          {zodiacOptions.map((zodiac) => (
-                            <SelectItem
-                              key={zodiac.value}
-                              value={zodiac.value}
-                              className="flex items-center justify-between"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span>{zodiac.label}</span>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                                    </TooltipTrigger>
-                                    <TooltipContent side="right">
-                                      <p className="text-xs">
-                                        {zodiac.description}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Your zodiac sign provides special bonuses to your kingdom
+                    <p className="text-sm text-muted-foreground">
+                      Choose your zodiac sign to receive special bonuses
                     </p>
+                    
+                    <div className="grid grid-cols-3 gap-4">
+                      {zodiacOptions.map((zodiac) => (
+                        <motion.div
+                          key={zodiac.value}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className={`p-4 rounded-lg cursor-pointer transition-all duration-200 ${
+                            selectedZodiac === zodiac.value
+                              ? `${zodiac.color} border-2 ${zodiac.textColor}`
+                              : "bg-background/50 border border-border"
+                          }`}
+                          onClick={() => setSelectedZodiac(zodiac.value)}
+                        >
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className={`p-2 rounded-full ${zodiac.color}`}>
+                              {zodiac.icon}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold">{zodiac.label}</h3>
+                              <p className="text-sm text-muted-foreground">{zodiac.description}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span>Element:</span>
+                              <span className="font-medium">{zodiac.element}</span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-sm">
+                              <span>Bonus:</span>
+                              <span className="font-medium">{zodiac.bonus}</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -1293,7 +1439,7 @@ export default function Register() {
                     </div>
                     <Button
                       type="submit"
-                      className={`w-full shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200 active:scale-95 ${selectedRace ? raceDetails.buttonColor : ""}`}
+                      className={`w-full shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200 active:scale-95 ${selectedRace ? races.find(race => race.name === selectedRace)?.textColor : ""}`}
                       disabled={loading}
                     >
                       {loading ? (
@@ -1317,7 +1463,7 @@ export default function Register() {
                   Already have an account?{" "}
                   <Link
                     to="/login"
-                    className={`${selectedRace ? raceDetails.textColor : "text-primary"} hover:underline font-medium`}
+                    className={`${selectedRace ? races.find(race => race.name === selectedRace)?.textColor : "text-primary"} hover:underline font-medium`}
                   >
                     Login
                   </Link>
@@ -1342,7 +1488,7 @@ export default function Register() {
                   <Button
                     type="button"
                     onClick={nextStep}
-                    className={`${selectedRace ? raceDetails.buttonColor : "bg-primary hover:bg-primary/90"} shadow-neuro-flat hover:shadow-neuro-pressed flex items-center gap-2 transition-all duration-200 active:scale-95`}
+                    className={`${selectedRace ? races.find(race => race.name === selectedRace)?.buttonColor : "bg-primary hover:bg-primary/90"} shadow-neuro-flat hover:shadow-neuro-pressed flex items-center gap-2 transition-all duration-200 active:scale-95`}
                   >
                     Continue <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -1350,7 +1496,7 @@ export default function Register() {
                   <Button
                     type="button"
                     onClick={moveToAccountCreation}
-                    className={`${selectedRace ? raceDetails.buttonColor : "bg-primary hover:bg-primary/90"} shadow-neuro-flat hover:shadow-neuro-pressed flex items-center gap-2 transition-all duration-200 active:scale-95`}
+                    className={`${selectedRace ? races.find(race => race.name === selectedRace)?.buttonColor : "bg-primary hover:bg-primary/90"} shadow-neuro-flat hover:shadow-neuro-pressed flex items-center gap-2 transition-all duration-200 active:scale-95`}
                     disabled={loading}
                   >
                     {loading ? (

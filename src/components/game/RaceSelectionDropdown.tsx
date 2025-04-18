@@ -1,147 +1,192 @@
-import { useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../ui/tooltip";
-import {
-  Crown,
-  Wand,
-  Mountain,
-  Bird,
-  Skull,
-  Shield,
-  Sword,
-  Ghost,
-  Info,
-  MapPin,
-} from "lucide-react";
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ChevronDown, 
+  Sword, 
+  Shield, 
+  Zap, 
+  Users,
+  ArrowRight,
+  Check
+} from 'lucide-react';
+import { NeumorphicCard, NeumorphicButton, NeumorphicBadge } from '@/styles/components';
+
+interface Race {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+  bonuses: {
+    military: number;
+    defense: number;
+    production: number;
+    population: number;
+  };
+  specialty: string;
+  startingBonus: string;
+}
+
+const races: Race[] = [
+  {
+    id: "1",
+    name: "Ksatriya",
+    description: "Bangsa pejuang yang ahli dalam pertempuran dan strategi militer",
+    icon: <Sword className="h-5 w-5" />,
+    color: "red",
+    bonuses: {
+      military: 20,
+      defense: 15,
+      production: 5,
+      population: 10
+    },
+    specialty: "Pertempuran",
+    startingBonus: "Pasukan Elite Awal"
+  },
+  {
+    id: "2",
+    name: "Wanamarta",
+    description: "Bangsa yang hidup harmonis dengan alam dan ahli dalam produksi",
+    icon: <Zap className="h-5 w-5" />,
+    color: "green",
+    bonuses: {
+      military: 5,
+      defense: 10,
+      production: 25,
+      population: 15
+    },
+    specialty: "Produksi",
+    startingBonus: "Sumber Daya Berlimpah"
+  },
+  {
+    id: "3",
+    name: "Wirabumi",
+    description: "Bangsa yang kuat dan tangguh dengan pertahanan yang kokoh",
+    icon: <Shield className="h-5 w-5" />,
+    color: "blue",
+    bonuses: {
+      military: 10,
+      defense: 25,
+      production: 10,
+      population: 5
+    },
+    specialty: "Pertahanan",
+    startingBonus: "Benteng Kuat"
+  },
+  {
+    id: "4",
+    name: "Jatayu",
+    description: "Bangsa yang cerdas dengan populasi yang berkembang pesat",
+    icon: <Users className="h-5 w-5" />,
+    color: "purple",
+    bonuses: {
+      military: 5,
+      defense: 5,
+      production: 15,
+      population: 25
+    },
+    specialty: "Populasi",
+    startingBonus: "Pertumbuhan Cepat"
+  }
+];
 
 interface RaceSelectionDropdownProps {
-  onSelectRace: (race: string) => void;
-  selectedRace?: string;
+  onSelect: (race: Race) => void;
+  selectedRace?: Race;
+  disabled?: boolean;
 }
 
-export default function RaceSelectionDropdown({
-  onSelectRace,
+const RaceSelectionDropdown: React.FC<RaceSelectionDropdownProps> = ({
+  onSelect,
   selectedRace,
-}: RaceSelectionDropdownProps) {
-  // Define races object for kingdom setup
-  const races = {
-    ksatriya: {
-      name: "Ksatriya",
-      description:
-        "The most intelligent beings who live prosperously in the lowlands. They are the most stable race in the Kurusetra universe.",
-      icon: <Crown className="h-4 w-4" />,
-      specialty: "Diplomacy and Trade",
-      startingBonus: "+15% Gold production, +10% Diplomatic influence",
-    },
-    wanamarta: {
-      name: "Wanamarta",
-      description:
-        "Mystical beings who live in dense forests filled with magical auras. They possess extraordinary magical abilities.",
-      icon: <Wand className="h-4 w-4" />,
-      specialty: "Magic and Research",
-      startingBonus: "+20% Magic power, +15% Research speed",
-    },
-    wirabumi: {
-      name: "Wirabumi",
-      description:
-        "Hard-working beings who live in hidden areas, caves, and underground. Known for their industrious nature.",
-      icon: <Mountain className="h-4 w-4" />,
-      specialty: "Mining and Construction",
-      startingBonus: "+25% Resource gathering, +15% Building speed",
-    },
-    jatayu: {
-      name: "Jatayu",
-      description:
-        "Flying beings who live in highlands. They possess incredible aggressive attack capabilities and unmatched speed.",
-      icon: <Bird className="h-4 w-4" />,
-      specialty: "Speed and Reconnaissance",
-      startingBonus: "+30% Movement speed, +20% Vision range",
-    },
-    kurawa: {
-      name: "Kurawa",
-      description:
-        "The most cunning lowland beings in the Kurusetra universe. Masters of secret operations and deception.",
-      icon: <Skull className="h-4 w-4" />,
-      specialty: "Espionage and Sabotage",
-      startingBonus: "+25% Spy effectiveness, +15% Enemy detection",
-    },
-    tibrasara: {
-      name: "Tibrasara",
-      description:
-        "Mysterious beings who live in dark forests with unparalleled archery skills. Their killing instinct is feared throughout the realm.",
-      icon: <Shield className="h-4 w-4" />,
-      specialty: "Ranged Combat and Stealth",
-      startingBonus: "+20% Ranged damage, +15% Stealth capability",
-    },
-    raksasa: {
-      name: "Raksasa",
-      description:
-        "Enormous and terrifying beings who inhabit steep rocky hills. Their army strength is unmatched in the realm.",
-      icon: <Sword className="h-4 w-4" />,
-      specialty: "Brute Force and Intimidation",
-      startingBonus: "+30% Army strength, +20% Enemy morale reduction",
-    },
-    dedemit: {
-      name: "Dedemit",
-      description:
-        "Spectral beings who exist in the realm of wandering spirits. They require no food to survive and their armies never perish in battle.",
-      icon: <Ghost className="h-4 w-4" />,
-      specialty: "Immortality and Spirit Magic",
-      startingBonus: "-25% Food consumption, +20% Army revival rate",
-    },
-  };
+  disabled = false
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="w-full">
-      <Select value={selectedRace} onValueChange={onSelectRace}>
-        <SelectTrigger className="w-full h-11 shadow-neuro-concave">
-          <SelectValue placeholder="Select your race" />
-        </SelectTrigger>
-        <SelectContent className="max-h-80">
-          <SelectGroup>
-            <SelectLabel>Choose Your Race</SelectLabel>
-            {Object.entries(races).map(([id, race]) => (
-              <SelectItem key={id} value={id} className="py-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-1 rounded-md bg-accent/30">{race.icon}</div>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{race.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {race.specialty}
-                    </span>
-                  </div>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help ml-1" />
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="max-w-xs">
-                        <p className="text-xs mb-1">{race.description}</p>
-                        <p className="text-xs font-medium">
-                          {race.startingBonus}
+    <div className="relative">
+      <NeumorphicButton
+        className="w-full justify-between"
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        disabled={disabled}
+      >
+        <div className="flex items-center gap-2">
+          {selectedRace ? (
+            <>
+              {selectedRace.icon}
+              <span>{selectedRace.name}</span>
+            </>
+          ) : (
+            <span>Pilih Bangsa</span>
+          )}
+        </div>
+        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </NeumorphicButton>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute z-50 w-full mt-2"
+          >
+            <NeumorphicCard className="p-4 space-y-4">
+              {races.map((race) => (
+                <div
+                  key={race.id}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    onSelect(race);
+                    setIsOpen(false);
+                  }}
+                >
+                  <NeumorphicCard className="p-4 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          {race.icon}
+                          <h3 className="font-semibold">{race.name}</h3>
+                          {selectedRace?.id === race.id && (
+                            <NeumorphicBadge type="success">
+                              <Check className="h-3 w-3 mr-1" />
+                              Terpilih
+                            </NeumorphicBadge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {race.description}
                         </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                        <div className="grid grid-cols-2 gap-2">
+                          <NeumorphicBadge type="info">
+                            <Sword className="h-3 w-3 mr-1" />
+                            Militer +{race.bonuses.military}%
+                          </NeumorphicBadge>
+                          <NeumorphicBadge type="info">
+                            <Shield className="h-3 w-3 mr-1" />
+                            Pertahanan +{race.bonuses.defense}%
+                          </NeumorphicBadge>
+                          <NeumorphicBadge type="info">
+                            <Zap className="h-3 w-3 mr-1" />
+                            Produksi +{race.bonuses.production}%
+                          </NeumorphicBadge>
+                          <NeumorphicBadge type="info">
+                            <Users className="h-3 w-3 mr-1" />
+                            Populasi +{race.bonuses.population}%
+                          </NeumorphicBadge>
+                        </div>
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  </NeumorphicCard>
                 </div>
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+              ))}
+            </NeumorphicCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-}
+};
+
+export default RaceSelectionDropdown;

@@ -31,26 +31,25 @@ import {
   ArrowUp,
   BarChart,
   Plus,
+  Star,
 } from "lucide-react";
+import { useGameState } from '../../hooks/useGameState';
+import { NeumorphicCard, NeumorphicButton, NeumorphicProgress, NeumorphicBadge } from '@/styles/components';
+
+interface ResourceStats {
+  current: number;
+  max: number;
+  rate: number;
+  name: string;
+  icon: JSX.Element;
+  color: string;
+}
 
 const ResourceManagement = () => {
   const { toast } = useToast();
-
-  // Resource data with production rates
-  const [resources, setResources] = useState({
-    gold: 15000,
-    food: 8500,
-    population: 1200,
-    maxPopulation: 1500,
-    goldProduction: 1200,
-    foodProduction: 950,
-    materials: 5000,
-    maxMaterials: 10000,
-    materialsProduction: 600,
-    researchPoints: 250,
-    maxResearchPoints: 1000,
-    researchProduction: 50,
-  });
+  const { player, updatePlayer } = useGameState();
+  const [resources, setResources] = useState(player.resources);
+  const [isCollecting, setIsCollecting] = useState(false);
 
   // Resource allocation with worker distribution
   const [allocation, setAllocation] = useState({
@@ -293,500 +292,179 @@ const ResourceManagement = () => {
     });
   };
 
+  const collectResources = async (resourceType: keyof typeof resources) => {
+    if (isCollecting) return;
+    
+    setIsCollecting(true);
+    try {
+      const amount = Math.floor(Math.random() * 10) + 1;
+      const updatedResources = {
+        ...resources,
+        [resourceType]: resources[resourceType] + amount
+      };
+      
+      await updatePlayer({ resources: updatedResources });
+      setResources(updatedResources);
+      
+      toast({
+        title: "Resource Collected",
+        description: `Collected ${amount} ${resourceType}!`,
+        variant: "success"
+      });
+    } catch (error) {
+      toast({
+        title: "Resource Collection Error",
+        description: "Failed to collect resources",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCollecting(false);
+    }
+  };
+
+  const upgradeResourceProduction = async (resourceType: keyof typeof resources) => {
+    if (resources.gold < 100) {
+      toast({
+        title: "Insufficient Gold",
+        description: "Not enough gold to upgrade",
+        variant: "warning"
+      });
+      return;
+    }
+
+    try {
+      const productionKey = `${resourceType}Production` as keyof typeof resources;
+      const updatedResources = {
+        ...resources,
+        gold: resources.gold - 100,
+        [productionKey]: resources[productionKey] + 1
+      };
+      
+      await updatePlayer({ resources: updatedResources });
+      setResources(updatedResources);
+      
+      toast({
+        title: "Resource Production Upgraded",
+        description: `${resourceType} production upgraded!`,
+        variant: "success"
+      });
+    } catch (error) {
+      toast({
+        title: "Production Upgrade Error",
+        description: "Failed to upgrade production",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Mock data for resources
+  const resourceStats: ResourceStats[] = [
+    {
+      name: 'Gold',
+      current: resources.gold,
+      max: 50000,
+      rate: resources.goldProduction,
+      icon: <Coins className="h-5 w-5" />,
+      color: 'text-yellow-500'
+    },
+    {
+      name: 'Food',
+      current: resources.food,
+      max: 30000,
+      rate: resources.foodProduction,
+      icon: <Wheat className="h-5 w-5" />,
+      color: 'text-green-500'
+    },
+    {
+      name: 'Population',
+      current: resources.population,
+      max: resources.maxPopulation,
+      rate: 5,
+      icon: <Users className="h-5 w-5" />,
+      color: 'text-blue-500'
+    },
+    {
+      name: 'Influence',
+      current: 450,
+      max: 600,
+      rate: -2,
+      icon: <Star className="h-5 w-5" />,
+      color: 'text-purple-500'
+    }
+  ];
+
   return (
-    <div className="bg-background min-h-screen p-6 bg-gradient-to-b from-background to-background/95">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="flex items-center gap-3 mb-6">
-          <Coins className="h-8 w-8 text-yellow-500" />
-          <h1 className="text-3xl font-bold">Resource Management</h1>
+    <NeumorphicCard>
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Resource Management</h2>
+          <NeumorphicButton>
+            Market
+          </NeumorphicButton>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl flex items-center">
-                <Coins className="h-5 w-5 mr-2 text-yellow-500" />
-                Gold
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">
-                {resources.gold.toLocaleString()}
-              </p>
-              <div className="flex items-center text-sm text-muted-foreground mt-2">
-                <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
-                <span>{resources.goldProduction}/hour</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {resourceStats.map((resource) => (
+            <div key={resource.name} className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`${resource.color}`}>
+                    {resource.icon}
+                  </div>
+                  <span className="font-medium">{resource.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">
+                    {resource.current}/{resource.max}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {resource.rate > 0 ? (
+                      <ArrowUp className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <ArrowDown className="h-4 w-4 text-red-500" />
+                    )}
+                    <span className={resource.rate > 0 ? "text-green-500" : "text-red-500"}>
+                      {Math.abs(resource.rate)}/h
+                    </span>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl flex items-center">
-                <Wheat className="h-5 w-5 mr-2 text-green-500" />
-                Food
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">
-                {resources.food.toLocaleString()}
-              </p>
-              <div className="flex items-center text-sm text-muted-foreground mt-2">
-                <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
-                <span>{resources.foodProduction}/hour</span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl flex items-center">
-                <BarChart className="h-5 w-5 mr-2 text-purple-500" />
-                Materials
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">
-                {resources.materials.toLocaleString()}
-              </p>
-              <div className="flex items-center text-sm text-muted-foreground mt-2">
-                <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
-                <span>{resources.materialsProduction}/hour</span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl flex items-center">
-                <Users className="h-5 w-5 mr-2 text-blue-500" />
-                Population
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">
-                {resources.population} / {resources.maxPopulation}
-              </p>
-              <Progress
-                value={(resources.population / resources.maxPopulation) * 100}
-                className="h-2 mt-2"
+
+              <NeumorphicProgress 
+                value={(resource.current / resource.max) * 100}
               />
-            </CardContent>
-          </Card>
+
+              <div className="flex justify-between gap-2">
+                <NeumorphicButton className="flex-1 text-sm">
+                  Collect
+                </NeumorphicButton>
+                <NeumorphicButton className="flex-1 text-sm">
+                  Upgrade Storage
+                </NeumorphicButton>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <Tabs
-          defaultValue="allocation"
-          className="w-full bg-card/30 p-4 rounded-lg border border-border/40 shadow-sm"
-        >
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="allocation">Resource Allocation</TabsTrigger>
-            <TabsTrigger value="trade">Trade</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="allocation" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Worker Allocation</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium">
-                        Farming ({allocation.farming}%)
-                      </label>
-                      <span className="text-sm text-muted-foreground">
-                        {Math.round(
-                          (allocation.farming / 100) * resources.population,
-                        )}{" "}
-                        workers
-                      </span>
-                    </div>
-                    <Slider
-                      defaultValue={[allocation.farming]}
-                      max={100}
-                      step={5}
-                      onValueChange={(value) =>
-                        updateAllocation("farming", value)
-                      }
-                      className="mb-4"
-                    />
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>
-                        Food: +{Math.round(allocation.farming * 20)}/hour
-                      </span>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium">
-                        Mining ({allocation.mining}%)
-                      </label>
-                      <span className="text-sm text-muted-foreground">
-                        {Math.round(
-                          (allocation.mining / 100) * resources.population,
-                        )}{" "}
-                        workers
-                      </span>
-                    </div>
-                    <Slider
-                      defaultValue={[allocation.mining]}
-                      max={100}
-                      step={5}
-                      onValueChange={(value) =>
-                        updateAllocation("mining", value)
-                      }
-                      className="mb-4"
-                    />
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>
-                        Gold: +{Math.round(allocation.mining * 30)}/hour
-                      </span>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium">
-                        Lumber ({allocation.lumber}%)
-                      </label>
-                      <span className="text-sm text-muted-foreground">
-                        {Math.round(
-                          (allocation.lumber / 100) * resources.population,
-                        )}{" "}
-                        workers
-                      </span>
-                    </div>
-                    <Slider
-                      defaultValue={[allocation.lumber]}
-                      max={100}
-                      step={5}
-                      onValueChange={(value) =>
-                        updateAllocation("lumber", value)
-                      }
-                      className="mb-4"
-                    />
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>
-                        Materials: +{Math.round(allocation.lumber * 15)}/hour
-                      </span>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium">
-                        Research ({allocation.research}%)
-                      </label>
-                      <span className="text-sm text-muted-foreground">
-                        {Math.round(
-                          (allocation.research / 100) * resources.population,
-                        )}{" "}
-                        workers
-                      </span>
-                    </div>
-                    <Slider
-                      defaultValue={[allocation.research]}
-                      max={100}
-                      step={5}
-                      onValueChange={(value) =>
-                        updateAllocation("research", value)
-                      }
-                      className="mb-4"
-                    />
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>
-                        Research Points: +{Math.round(allocation.research * 5)}
-                        /hour
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  className="w-full bg-green-600 hover:bg-green-700 transition-colors"
-                  onClick={applyAllocation}
-                >
-                  <BarChart className="h-4 w-4 mr-2" /> Apply Allocation
-                </Button>
-              </CardFooter>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Resource Production Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h3 className="text-sm font-medium mb-1">
-                        Gold Production
-                      </h3>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Base Production:</span>
-                        <span className="text-sm">800/hour</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">From Mining:</span>
-                        <span className="text-sm">
-                          +{Math.round(allocation.mining * 30)}/hour
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">From Buildings:</span>
-                        <span className="text-sm">+400/hour</span>
-                      </div>
-                      <Separator className="my-2" />
-                      <div className="flex justify-between font-medium">
-                        <span>Total:</span>
-                        <span>{resources.goldProduction}/hour</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-medium mb-1">
-                        Food Production
-                      </h3>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Base Production:</span>
-                        <span className="text-sm">500/hour</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">From Farming:</span>
-                        <span className="text-sm">
-                          +{Math.round(allocation.farming * 20)}/hour
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">From Buildings:</span>
-                        <span className="text-sm">+250/hour</span>
-                      </div>
-                      <Separator className="my-2" />
-                      <div className="flex justify-between font-medium">
-                        <span>Total:</span>
-                        <span>{resources.foodProduction}/hour</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="trade" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Available Trade Offers</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {tradeOffers.map((trade) => (
-                    <Card key={trade.id} className="overflow-hidden">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{trade.kingdom}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Expires in {trade.expires}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="text-center">
-                              <p className="text-sm font-medium">
-                                {trade.offering}
-                              </p>
-                              <p className="text-lg font-bold text-green-600">
-                                {trade.offeringAmount}
-                              </p>
-                            </div>
-                            <ArrowRight className="h-5 w-5" />
-                            <div className="text-center">
-                              <p className="text-sm font-medium">
-                                {trade.requesting}
-                              </p>
-                              <p className="text-lg font-bold text-red-600">
-                                {trade.requestingAmount}
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            onClick={() => {
-                              const selectedTrade = tradeOffers.find(
-                                (t) => t.id === trade.id,
-                              );
-                              if (selectedTrade) {
-                                acceptTrade(trade.id);
-                              }
-                            }}
-                            className="ml-4"
-                          >
-                            Accept
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    toast({
-                      title: "Refreshed Offers",
-                      description: "Trade offers have been refreshed.",
-                    });
-                  }}
-                >
-                  <ArrowDown className="h-4 w-4 mr-2" /> Refresh Offers
-                </Button>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" /> Create New Offer
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Create Trade Offer</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm font-medium mb-1 block">
-                            Offering
-                          </label>
-                          <select
-                            className="w-full p-2 border rounded"
-                            value={newTradeOffer.offering}
-                            onChange={(e) =>
-                              setNewTradeOffer({
-                                ...newTradeOffer,
-                                offering: e.target.value,
-                              })
-                            }
-                          >
-                            <option value="Gold">Gold</option>
-                            <option value="Food">Food</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium mb-1 block">
-                            Amount
-                          </label>
-                          <Input
-                            type="number"
-                            min="1"
-                            value={newTradeOffer.offeringAmount}
-                            onChange={(e) =>
-                              setNewTradeOffer({
-                                ...newTradeOffer,
-                                offeringAmount: parseInt(e.target.value) || 0,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex justify-center">
-                        <ArrowDown className="h-6 w-6" />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm font-medium mb-1 block">
-                            Requesting
-                          </label>
-                          <select
-                            className="w-full p-2 border rounded"
-                            value={newTradeOffer.requesting}
-                            onChange={(e) =>
-                              setNewTradeOffer({
-                                ...newTradeOffer,
-                                requesting: e.target.value,
-                              })
-                            }
-                          >
-                            <option value="Gold">Gold</option>
-                            <option value="Food">Food</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium mb-1 block">
-                            Amount
-                          </label>
-                          <Input
-                            type="number"
-                            min="1"
-                            value={newTradeOffer.requestingAmount}
-                            onChange={(e) =>
-                              setNewTradeOffer({
-                                ...newTradeOffer,
-                                requestingAmount: parseInt(e.target.value) || 0,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button onClick={createTradeOffer}>Create Offer</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </CardFooter>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Market Prices</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="p-4 border rounded-lg text-center">
-                      <Coins className="h-6 w-6 mx-auto text-yellow-500 mb-2" />
-                      <p className="font-medium">Gold</p>
-                      <div className="flex items-center justify-center mt-1">
-                        <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
-                        <span className="text-sm">+5%</span>
-                      </div>
-                    </div>
-                    <div className="p-4 border rounded-lg text-center">
-                      <Wheat className="h-6 w-6 mx-auto text-green-500 mb-2" />
-                      <p className="font-medium">Food</p>
-                      <div className="flex items-center justify-center mt-1">
-                        <ArrowDown className="h-4 w-4 text-red-500 mr-1" />
-                        <span className="text-sm">-2%</span>
-                      </div>
-                    </div>
-                    <div className="p-4 border rounded-lg text-center">
-                      <BarChart className="h-6 w-6 mx-auto text-blue-500 mb-2" />
-                      <p className="font-medium">Materials</p>
-                      <div className="flex items-center justify-center mt-1">
-                        <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
-                        <span className="text-sm">+8%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </motion.div>
-    </div>
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-3">Resource Bonuses</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <NeumorphicBadge type="success">
+              Gold Production +15%
+            </NeumorphicBadge>
+            <NeumorphicBadge type="info">
+              Food Storage +20%
+            </NeumorphicBadge>
+            <NeumorphicBadge type="warning">
+              Population Growth +10%
+            </NeumorphicBadge>
+            <NeumorphicBadge type="error">
+              Resource Protection +25%
+            </NeumorphicBadge>
+          </div>
+        </div>
+      </div>
+    </NeumorphicCard>
   );
 };
 

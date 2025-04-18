@@ -2,17 +2,6 @@ import React from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import {
   Crown,
   User,
   Mail,
@@ -21,6 +10,7 @@ import {
   MapPin,
   ArrowLeft,
 } from "lucide-react";
+import { NeumorphicCard, NeumorphicButton, NeumorphicContainer, NeumorphicBadge } from "../styles/components";
 
 const UserProfile = () => {
   const { user, userProfile, signOut } = useAuth();
@@ -129,246 +119,173 @@ const UserProfile = () => {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <Button variant="outline" className="mb-6" onClick={() => navigate(-1)}>
+    <NeumorphicContainer className="container mx-auto py-8 px-4">
+      <NeumorphicButton onClick={() => navigate(-1)} className="mb-6">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back
-      </Button>
+      </NeumorphicButton>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Profile</CardTitle>
-              <CardDescription>Your account information</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <tbody>
-                    <tr className="border-b border-border">
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center">
-                          <div className="bg-primary/10 p-2 rounded-full mr-3">
-                            <User className="h-4 w-4 text-primary" />
-                          </div>
-                          <span className="text-sm font-medium">Email</span>
-                        </div>
-                      </td>
-                      <td className="py-3 text-right">
-                        <span className="font-medium">{user?.email}</span>
-                      </td>
-                    </tr>
+          <NeumorphicCard>
+            <div className="p-6">
+              <h2 className="text-2xl font-bold mb-2">User Profile</h2>
+              <p className="text-gray-500 mb-4">Your account information</p>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="bg-primary/10 p-2 rounded-full mr-3">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium">Email</span>
+                  </div>
+                  <span className="font-medium">{user?.email}</span>
+                </div>
 
-                    <tr className="border-b border-border">
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center">
-                          <div className="bg-primary/10 p-2 rounded-full mr-3">
-                            <Crown className="h-4 w-4 text-primary" />
-                          </div>
-                          <span className="text-sm font-medium">Kingdom</span>
-                        </div>
-                      </td>
-                      <td className="py-3 text-right">
-                        <span className="font-medium">
-                          {userProfile.kingdomName || "No Kingdom"}
-                        </span>
-                      </td>
-                    </tr>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="bg-primary/10 p-2 rounded-full mr-3">
+                      <Crown className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium">Kingdom</span>
+                  </div>
+                  <span className="font-medium">
+                    {userProfile.kingdomName || "No Kingdom"}
+                  </span>
+                </div>
 
-                    <tr className="border-b border-border">
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center">
-                          <div className="bg-primary/10 p-2 rounded-full mr-3">
-                            <Shield className="h-4 w-4 text-primary" />
-                          </div>
-                          <span className="text-sm font-medium">Race</span>
-                        </div>
-                      </td>
-                      <td className="py-3 text-right">
-                        <span className="font-medium">{raceDetails.name}</span>
-                      </td>
-                    </tr>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="bg-primary/10 p-2 rounded-full mr-3">
+                      <Shield className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium">Race</span>
+                  </div>
+                  <span className="font-medium">{raceDetails.name}</span>
+                </div>
 
-                    <tr className="border-b border-border">
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center">
-                          <div className="bg-primary/10 p-2 rounded-full mr-3">
-                            <Calendar className="h-4 w-4 text-primary" />
-                          </div>
-                          <span className="text-sm font-medium">
-                            Current Day
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-3 text-right">
-                        <span className="font-medium">
-                          {kingdomStats.currentDay}
-                        </span>
-                      </td>
-                    </tr>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="bg-primary/10 p-2 rounded-full mr-3">
+                      <Calendar className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium">Current Day</span>
+                  </div>
+                  <span className="font-medium">{kingdomStats.currentDay}</span>
+                </div>
 
-                    {userProfile.zodiac && (
-                      <tr className="border-b border-border">
-                        <td className="py-3 pr-4">
-                          <div className="flex items-center">
-                            <div className="bg-primary/10 p-2 rounded-full mr-3">
-                              <Mail className="h-4 w-4 text-primary" />
-                            </div>
-                            <span className="text-sm font-medium">Zodiac</span>
-                          </div>
-                        </td>
-                        <td className="py-3 text-right">
-                          <span className="font-medium">
-                            {userProfile.zodiac}
-                          </span>
-                        </td>
-                      </tr>
-                    )}
+                {userProfile.zodiac && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="bg-primary/10 p-2 rounded-full mr-3">
+                        <Mail className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="text-sm font-medium">Zodiac</span>
+                    </div>
+                    <span className="font-medium">{userProfile.zodiac}</span>
+                  </div>
+                )}
 
-                    {userProfile.specialty && (
-                      <tr className="border-b border-border">
-                        <td className="py-3 pr-4">
-                          <div className="flex items-center">
-                            <div className="bg-primary/10 p-2 rounded-full mr-3">
-                              <MapPin className="h-4 w-4 text-primary" />
-                            </div>
-                            <span className="text-sm font-medium">
-                              Specialty
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 text-right">
-                          <span className="font-medium">
-                            {userProfile.specialty}
-                          </span>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                {userProfile.specialty && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="bg-primary/10 p-2 rounded-full mr-3">
+                        <MapPin className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="text-sm font-medium">Specialty</span>
+                    </div>
+                    <span className="font-medium">{userProfile.specialty}</span>
+                  </div>
+                )}
               </div>
-            </CardContent>
-            <CardFooter>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleSignOut}
-              >
-                Sign Out
-              </Button>
-            </CardFooter>
-          </Card>
+            </div>
+          </NeumorphicCard>
         </div>
 
         <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Kingdom Information</CardTitle>
-              <CardDescription>
-                Details about your {userProfile.kingdomName} kingdom
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <h3 className="font-medium mb-2 flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  {raceDetails.name} Race
-                </h3>
-                <p className="mb-3">{raceDetails.description}</p>
-                <div className="flex flex-wrap gap-2">
-                  {raceDetails.abilities.map((ability, index) => (
-                    <Badge key={index} variant="secondary">
-                      {ability}
-                    </Badge>
-                  ))}
+          <NeumorphicCard>
+            <div className="p-6">
+              <h2 className="text-2xl font-bold mb-4">Kingdom Stats</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Resources</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Gold</span>
+                      <NeumorphicBadge type="success">
+                        {kingdomStats.resources.gold}
+                      </NeumorphicBadge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Food</span>
+                      <NeumorphicBadge type="success">
+                        {kingdomStats.resources.food}
+                      </NeumorphicBadge>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Military</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Infantry</span>
+                      <NeumorphicBadge type="warning">
+                        {kingdomStats.military.infantry}
+                      </NeumorphicBadge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Archers</span>
+                      <NeumorphicBadge type="warning">
+                        {kingdomStats.military.archers}
+                      </NeumorphicBadge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Cavalry</span>
+                      <NeumorphicBadge type="warning">
+                        {kingdomStats.military.cavalry}
+                      </NeumorphicBadge>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Buildings</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Barracks</span>
+                      <NeumorphicBadge type="info">
+                        {kingdomStats.buildings.barracks}
+                      </NeumorphicBadge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Farms</span>
+                      <NeumorphicBadge type="info">
+                        {kingdomStats.buildings.farm}
+                      </NeumorphicBadge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Treasury</span>
+                      <NeumorphicBadge type="info">
+                        {kingdomStats.buildings.treasury}
+                      </NeumorphicBadge>
+                    </div>
+                  </div>
                 </div>
               </div>
+            </div>
+          </NeumorphicCard>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Resources</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm">Gold:</span>
-                        <span className="text-sm font-medium">
-                          {kingdomStats.resources.gold}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Food:</span>
-                        <span className="text-sm font-medium">
-                          {kingdomStats.resources.food}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Military</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm">Infantry:</span>
-                        <span className="text-sm font-medium">
-                          {kingdomStats.military.infantry}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Archers:</span>
-                        <span className="text-sm font-medium">
-                          {kingdomStats.military.archers}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Cavalry:</span>
-                        <span className="text-sm font-medium">
-                          {kingdomStats.military.cavalry}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Buildings</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm">Barracks:</span>
-                        <span className="text-sm font-medium">
-                          Level {kingdomStats.buildings.barracks}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Farm:</span>
-                        <span className="text-sm font-medium">
-                          Level {kingdomStats.buildings.farm}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Treasury:</span>
-                        <span className="text-sm font-medium">
-                          Level {kingdomStats.buildings.treasury}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mt-6">
+            <NeumorphicButton onClick={handleSignOut} className="w-full">
+              Sign Out
+            </NeumorphicButton>
+          </div>
         </div>
       </div>
-    </div>
+    </NeumorphicContainer>
   );
 };
 

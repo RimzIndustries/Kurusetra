@@ -1,4 +1,5 @@
 import React from "react";
+import styled from "styled-components";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Home,
@@ -12,7 +13,130 @@ import {
   Map,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { Button } from "./ui/button";
+import { NeumorphicButton } from "../styles/components";
+
+const Header = styled.header`
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: ${props => props.theme.primary};
+  box-shadow: 
+    0 5px 10px ${props => props.theme.shadow},
+    0 -2px 5px ${props => props.theme.light};
+`;
+
+const Container = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+`;
+
+const NavContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4rem;
+`;
+
+const Logo = styled(Link)`
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: ${props => props.theme.accent};
+  text-decoration: none;
+  text-shadow: 
+    1px 1px 2px ${props => props.theme.shadow},
+    -1px -1px 2px ${props => props.theme.light};
+`;
+
+const DesktopNav = styled.nav`
+  display: none;
+  gap: 0.25rem;
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+`;
+
+const NavLink = styled(Link)<{ active?: boolean }>`
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: ${props => props.theme.text};
+  transition: all 0.3s ease;
+
+  ${props => props.active ? `
+    background: ${props.theme.accent};
+    color: white;
+    box-shadow: 
+      inset 3px 3px 6px rgba(0, 0, 0, 0.2),
+      inset -3px -3px 6px rgba(255, 255, 255, 0.1);
+  ` : `
+    box-shadow: 
+      3px 3px 6px ${props.theme.shadow},
+      -3px -3px 6px ${props.theme.light};
+
+    &:hover {
+      transform: translateY(-2px);
+      background: ${props.theme.secondary};
+    }
+  `}
+`;
+
+const MobileNav = styled.div`
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  padding-bottom: 0.75rem;
+  
+  @media (min-width: 768px) {
+    display: none;
+  }
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const MobileNavLink = styled(NavLink)`
+  padding: 0.5rem;
+  flex-direction: column;
+  font-size: 0.75rem;
+  white-space: nowrap;
+`;
+
+const MobileMenuButton = styled.button`
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${props => props.theme.primary};
+  color: ${props => props.theme.text};
+  box-shadow: 
+    3px 3px 6px ${props => props.theme.shadow},
+    -3px -3px 6px ${props => props.theme.light};
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const LogoutButton = styled(NeumorphicButton)`
+  margin-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
 
 const Navigation = () => {
   const location = useLocation();
@@ -22,167 +146,108 @@ const Navigation = () => {
   const handleLogout = async () => {
     try {
       await signOut();
-      // Clear any local storage
       localStorage.clear();
-      // Force navigation after signout completes
       window.location.href = "/login";
     } catch (error) {
       console.error("Error during logout:", error);
-      // Fallback to regular navigation if there's an error
       navigate("/login");
     }
   };
 
   const navItems = [
-    { path: "/", label: "Home", icon: <Home className="h-5 w-5" /> },
-    {
-      path: "/kingdom",
-      label: "Kingdom",
-      icon: <Castle className="h-5 w-5" />,
-    },
-    {
-      path: "/building",
-      label: "Building",
-      icon: <Building2 className="h-5 w-5" />,
-    },
-    {
-      path: "/resources",
-      label: "Resources",
-      icon: <Coins className="h-5 w-5" />,
-    },
-    {
-      path: "/military",
-      label: "Military",
-      icon: <Sword className="h-5 w-5" />,
-    },
-    {
-      path: "/alliance",
-      label: "Dewan Raja",
-      icon: <Users className="h-5 w-5" />,
-    },
-    { path: "/combat", label: "Combat", icon: <Shield className="h-5 w-5" /> },
-    { path: "/map", label: "World Map", icon: <Map className="h-5 w-5" /> },
+    { path: "/", label: "Home", icon: <Home size={20} /> },
+    { path: "/kingdom", label: "Kingdom", icon: <Castle size={20} /> },
+    { path: "/building", label: "Building", icon: <Building2 size={20} /> },
+    { path: "/resources", label: "Resources", icon: <Coins size={20} /> },
+    { path: "/military", label: "Military", icon: <Sword size={20} /> },
+    { path: "/alliance", label: "Dewan Raja", icon: <Users size={20} /> },
+    { path: "/combat", label: "Combat", icon: <Shield size={20} /> },
+    { path: "/map", label: "World Map", icon: <Map size={20} /> },
   ];
 
   return (
-    <header className="border-b bg-background sticky top-0 z-10 shadow-sm">
-      <div className="container mx-auto px-4 max-w-7xl">
-        <div className="flex items-center justify-between h-16">
-          <Link
-            to="/"
-            className="text-2xl font-bold bg-gradient-to-r from-primary/80 to-primary bg-clip-text text-transparent"
-          >
-            Kurusetra
-          </Link>
+    <Header>
+      <Container>
+        <NavContainer>
+          <Logo to="/">Kurusetra</Logo>
 
-          <nav className="hidden md:flex space-x-1">
+          <DesktopNav>
             {navItems.map((item) => (
-              <Link
+              <NavLink
                 key={item.path}
                 to={item.path}
-                className={`px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors
-                  ${
-                    location.pathname === item.path
-                      ? "bg-primary text-primary-foreground"
-                      : "text-foreground hover:bg-accent hover:text-accent-foreground"
-                  }`}
+                active={location.pathname === item.path}
               >
                 {item.icon}
                 {item.label}
-              </Link>
+              </NavLink>
             ))}
             {user && (
               <>
-                <Link
+                <NavLink
                   to="/profile"
-                  className={`px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors
-                    ${
-                      location.pathname === "/profile"
-                        ? "bg-primary text-primary-foreground"
-                        : "text-foreground hover:bg-accent hover:text-accent-foreground"
-                    }`}
+                  active={location.pathname === "/profile"}
                 >
-                  <Users className="h-5 w-5" />
+                  <Users size={20} />
                   Profile
-                </Link>
-                <Button
-                  variant="ghost"
-                  onClick={handleLogout}
-                  className="ml-2 flex items-center gap-2"
-                >
-                  <LogOut className="h-5 w-5" />
+                </NavLink>
+                <LogoutButton onClick={handleLogout}>
+                  <LogOut size={20} />
                   <span className="hidden sm:inline">Logout</span>
-                </Button>
+                </LogoutButton>
               </>
             )}
-          </nav>
+          </DesktopNav>
 
           <div className="flex items-center gap-2">
             {user && (
               <>
-                <Link
+                <NavLink
                   to="/profile"
-                  className={`md:hidden px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors
-                    ${
-                      location.pathname === "/profile"
-                        ? "bg-primary text-primary-foreground"
-                        : "text-foreground hover:bg-accent hover:text-accent-foreground"
-                    }`}
-                >
-                  <Users className="h-5 w-5" />
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLogout}
+                  active={location.pathname === "/profile"}
                   className="md:hidden"
                 >
-                  <LogOut className="h-5 w-5" />
-                </Button>
+                  <Users size={20} />
+                </NavLink>
+                <LogoutButton onClick={handleLogout} className="md:hidden">
+                  <LogOut size={20} />
+                </LogoutButton>
               </>
             )}
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button className="p-2 rounded-md hover:bg-accent">
-                <span className="sr-only">Open menu</span>
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              </button>
-            </div>
+            <MobileMenuButton>
+              <span className="sr-only">Open menu</span>
+              <svg
+                width="24"
+                height="24"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </MobileMenuButton>
           </div>
-        </div>
+        </NavContainer>
 
-        {/* Mobile navigation - simplified version */}
-        <div className="md:hidden overflow-x-auto pb-3 flex space-x-1">
+        <MobileNav>
           {navItems.map((item) => (
-            <Link
+            <MobileNavLink
               key={item.path}
               to={item.path}
-              className={`p-2 rounded-md flex flex-col items-center justify-center text-xs whitespace-nowrap
-                ${
-                  location.pathname === item.path
-                    ? "bg-primary text-primary-foreground"
-                    : "text-foreground hover:bg-accent hover:text-accent-foreground"
-                }`}
+              active={location.pathname === item.path}
             >
               {item.icon}
               {item.label}
-            </Link>
+            </MobileNavLink>
           ))}
-        </div>
-      </div>
-    </header>
+        </MobileNav>
+      </Container>
+    </Header>
   );
 };
 

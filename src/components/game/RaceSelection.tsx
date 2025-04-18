@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -35,7 +35,15 @@ import {
   Skull,
   Shield,
   Ghost,
+  Zap,
+  Users,
+  Crown,
+  MapPin,
+  ArrowRight,
+  Check,
+  Info
 } from "lucide-react";
+import { NeumorphicCard, NeumorphicButton, NeumorphicBadge } from '@/styles/components';
 
 interface Race {
   id: string;
@@ -45,6 +53,18 @@ interface Race {
   advantages: string;
   icon: React.ReactNode;
   image: string;
+  color: string;
+  bonuses: {
+    military: number;
+    defense: number;
+    production: number;
+    population: number;
+  };
+  specialty: string;
+  startingBonus: string;
+  startingLocation: string;
+  strengths: string[];
+  weaknesses: string[];
 }
 
 const races: Race[] = [
@@ -63,6 +83,25 @@ const races: Race[] = [
     icon: <Brain className="h-6 w-6" />,
     image:
       "https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=800&q=80",
+    color: "red",
+    bonuses: {
+      military: 20,
+      defense: 15,
+      production: 5,
+      population: 10
+    },
+    specialty: "Pertempuran",
+    startingBonus: "Pasukan Elite Awal",
+    startingLocation: "Dataran Tinggi",
+    strengths: [
+      "Kekuatan Militer +20%",
+      "Pertahanan +15%",
+      "Kecepatan Pelatihan Pasukan +10%"
+    ],
+    weaknesses: [
+      "Produksi Sumber Daya -5%",
+      "Biaya Pemeliharaan Pasukan +10%"
+    ]
   },
   {
     id: "wanamarta",
@@ -75,6 +114,25 @@ const races: Race[] = [
     icon: <Wand className="h-6 w-6" />,
     image:
       "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=800&q=80",
+    color: "green",
+    bonuses: {
+      military: 5,
+      defense: 10,
+      production: 25,
+      population: 15
+    },
+    specialty: "Produksi",
+    startingBonus: "Sumber Daya Berlimpah",
+    startingLocation: "Hutan Subur",
+    strengths: [
+      "Produksi Sumber Daya +25%",
+      "Pertumbuhan Populasi +15%",
+      "Efisiensi Bangunan +10%"
+    ],
+    weaknesses: [
+      "Kekuatan Militer -5%",
+      "Kecepatan Pelatihan Pasukan -10%"
+    ]
   },
   {
     id: "wirabumi",
@@ -87,6 +145,25 @@ const races: Race[] = [
     icon: <Mountain className="h-6 w-6" />,
     image:
       "https://images.unsplash.com/photo-1518391846015-55a9cc003b25?w=800&q=80",
+    color: "blue",
+    bonuses: {
+      military: 10,
+      defense: 25,
+      production: 10,
+      population: 5
+    },
+    specialty: "Pertahanan",
+    startingBonus: "Benteng Kuat",
+    startingLocation: "Pegunungan",
+    strengths: [
+      "Pertahanan +25%",
+      "Kekuatan Benteng +20%",
+      "Biaya Pemeliharaan Pasukan -10%"
+    ],
+    weaknesses: [
+      "Pertumbuhan Populasi -5%",
+      "Kecepatan Ekspansi -10%"
+    ]
   },
   {
     id: "jatayu",
@@ -99,6 +176,25 @@ const races: Race[] = [
     icon: <Bird className="h-6 w-6" />,
     image:
       "https://images.unsplash.com/photo-1551887373-3c5bd224f6e2?w=800&q=80",
+    color: "purple",
+    bonuses: {
+      military: 5,
+      defense: 5,
+      production: 15,
+      population: 25
+    },
+    specialty: "Populasi",
+    startingBonus: "Pertumbuhan Cepat",
+    startingLocation: "Pesisir",
+    strengths: [
+      "Pertumbuhan Populasi +25%",
+      "Pengaruh Diplomatik +20%",
+      "Kecepatan Penelitian +15%"
+    ],
+    weaknesses: [
+      "Kekuatan Militer -5%",
+      "Pertahanan -5%"
+    ]
   },
   {
     id: "kurawa",
@@ -111,6 +207,18 @@ const races: Race[] = [
     icon: <Skull className="h-6 w-6" />,
     image:
       "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?w=800&q=80",
+    color: "yellow",
+    bonuses: {
+      military: 0,
+      defense: 0,
+      production: 0,
+      population: 0
+    },
+    specialty: "",
+    startingBonus: "",
+    startingLocation: "",
+    strengths: [],
+    weaknesses: []
   },
   {
     id: "tibrasara",
@@ -123,6 +231,18 @@ const races: Race[] = [
     icon: <Shield className="h-6 w-6" />,
     image:
       "https://images.unsplash.com/photo-1511497584788-876760111969?w=800&q=80",
+    color: "teal",
+    bonuses: {
+      military: 0,
+      defense: 0,
+      production: 0,
+      population: 0
+    },
+    specialty: "",
+    startingBonus: "",
+    startingLocation: "",
+    strengths: [],
+    weaknesses: []
   },
   {
     id: "raksasa",
@@ -135,6 +255,18 @@ const races: Race[] = [
     icon: <Sword className="h-6 w-6" />,
     image:
       "https://images.unsplash.com/photo-1500964757637-c85e8a162699?w=800&q=80",
+    color: "pink",
+    bonuses: {
+      military: 0,
+      defense: 0,
+      production: 0,
+      population: 0
+    },
+    specialty: "",
+    startingBonus: "",
+    startingLocation: "",
+    strengths: [],
+    weaknesses: []
   },
   {
     id: "dedemit",
@@ -151,6 +283,18 @@ const races: Race[] = [
     icon: <Ghost className="h-6 w-6" />,
     image:
       "https://images.unsplash.com/photo-1604005950576-8391ae377ae8?w=800&q=80",
+    color: "gray",
+    bonuses: {
+      military: 0,
+      defense: 0,
+      production: 0,
+      population: 0
+    },
+    specialty: "",
+    startingBonus: "",
+    startingLocation: "",
+    strengths: [],
+    weaknesses: []
   },
 ];
 
@@ -170,6 +314,7 @@ const RaceSelection = ({
   const [activeTab, setActiveTab] = useState("ksatriya");
   const [hoverEffect, setHoverEffect] = useState<string | null>(null);
   const [animateSelection, setAnimateSelection] = useState(false);
+  const [hoveredRace, setHoveredRace] = useState<Race | null>(null);
 
   const handleSelectRace = (raceId: string) => {
     setSelectedRace(raceId);
@@ -274,7 +419,9 @@ const RaceSelection = ({
                         }}
                         transition={{ duration: 0.3 }}
                       >
-                        {race.icon}
+                        <div className={`p-2 rounded-lg bg-${race.color}-500/10`}>
+                          {race.icon}
+                        </div>
                       </motion.div>
                       <span>{race.name}</span>
                     </TabsTrigger>
@@ -307,7 +454,9 @@ const RaceSelection = ({
                               transition={{ duration: 0.3 }}
                               className="p-1.5 bg-background/50 rounded-full shadow-neuro-flat"
                             >
-                              {race.icon}
+                              <div className={`p-2 rounded-lg bg-${race.color}-500/10`}>
+                                {race.icon}
+                              </div>
                             </motion.div>
                             {race.name}
                           </h3>
@@ -606,6 +755,57 @@ const RaceSelection = ({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <AnimatePresence>
+          {hoveredRace && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+            >
+              <NeumorphicCard className="p-4">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Lokasi Awal</h4>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span>{hoveredRace.startingLocation}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Kekuatan</h4>
+                    <ul className="space-y-1">
+                      {hoveredRace.strengths.map((strength, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <Check className="h-3 w-3 text-green-500" />
+                          <span>{strength}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Kelemahan</h4>
+                    <ul className="space-y-1">
+                      {hoveredRace.weaknesses.map((weakness, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <Info className="h-3 w-3 text-yellow-500" />
+                          <span>{weakness}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Bonus Awal</h4>
+                    <div className="flex items-center gap-2">
+                      <Crown className="h-4 w-4" />
+                      <span>{hoveredRace.startingBonus}</span>
+                    </div>
+                  </div>
+                </div>
+              </NeumorphicCard>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );
