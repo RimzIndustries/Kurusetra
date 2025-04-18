@@ -1,346 +1,192 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "./ui/card";
-import { Button } from "./ui/button";
-import { Progress } from "./ui/progress";
-import {
-  Crown,
-  Wand,
-  Mountain,
-  Bird,
-  Skull,
-  Shield,
-  Sword,
-  Ghost,
-  Sparkles,
-  Sun,
-  Moon,
-  Heart,
-  Trophy,
-  Zap,
-} from "lucide-react";
-import {
-  getAllZodiacPredictions,
-  ZodiacSign,
-  ZodiacPrediction,
-} from "../utils/zodiac";
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { getAllZodiacPredictions } from '../utils/zodiac';
+import { cn } from '../utils/cn';
+import LoginMenu from './auth/LoginMenu';
+
+type Race = {
+  name: string;
+  description: string;
+  strengths: string[];
+  image: string;
+};
+
+const races: Race[] = [
+  {
+    name: "Human",
+    description: "Balanced and adaptable, humans excel in diplomacy and trade. Their kingdoms are known for rapid technological advancement.",
+    strengths: ["Diplomatic Relations", "Trade Efficiency", "Fast Learning", "Resource Management"],
+    image: "/races/human.jpg"
+  },
+  {
+    name: "Elf",
+    description: "Masters of nature and magic, elves build their kingdoms in harmony with the environment. Their defenses are enhanced by natural barriers.",
+    strengths: ["Magic Mastery", "Nature Affinity", "Enhanced Defense", "Archery Excellence"],
+    image: "/races/elf.jpg"
+  },
+  {
+    name: "Dwarf",
+    description: "Expert miners and craftsmen, dwarven kingdoms are built deep within mountains. Their fortifications and weapons are unmatched.",
+    strengths: ["Mining Efficiency", "Crafting Mastery", "Fortress Building", "Artillery Power"],
+    image: "/races/dwarf.jpg"
+  },
+  {
+    name: "Orc",
+    description: "Warriors by nature, orc kingdoms thrive on conquest. Their military might and aggressive expansion strategies are feared by all.",
+    strengths: ["Military Power", "Rapid Expansion", "Resource Raiding", "Intimidation Tactics"],
+    image: "/races/orc.jpg"
+  }
+];
 
 export default function LandingPage() {
-  const { user, userProfile } = useAuth();
-  const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    // Check if user has a preference stored in localStorage
-    const savedTheme = localStorage.getItem("theme");
-    // Check if system prefers dark mode
-    const systemPrefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
+  const [selectedRace, setSelectedRace] = useState<Race | null>(null);
+  const [zodiacPredictions, setZodiacPredictions] = useState<any>(null);
+  const [selectedZodiac, setSelectedZodiac] = useState<string | null>(null);
+  const [showLoginMenu, setShowLoginMenu] = useState(false);
 
-    // If theme is explicitly set in localStorage, use that
-    if (savedTheme) {
-      return savedTheme === "dark";
-    }
-    // Otherwise use system preference
-    return systemPrefersDark;
-  });
-
-  // Apply dark mode class to document
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [isDarkMode]);
-
-  // Redirect to dashboard if user is logged in and has completed setup
-  useEffect(() => {
-    if (user && userProfile?.setupCompleted) {
-      navigate("/dashboard");
-    }
-  }, [user, userProfile, navigate]);
-
-  // Race information from Register component
-  const races = {
-    ksatriya: {
-      name: "Ksatriya",
-      description:
-        "The most intelligent beings who live prosperously in the lowlands. They are the most stable race in the Kurusetra universe.",
-      icon: <Crown className="h-6 w-6" />,
-      color: "bg-amber-100 border-amber-300",
-      textColor: "text-amber-800",
-      buttonColor: "bg-amber-600 hover:bg-amber-700",
-      specialty: "Diplomacy and Trade",
-      startingBonus: "+15% Gold production, +10% Diplomatic influence",
-    },
-    wanamarta: {
-      name: "Wanamarta",
-      description:
-        "Mystical beings who live in dense forests filled with magical auras. They possess extraordinary magical abilities.",
-      icon: <Wand className="h-6 w-6" />,
-      color: "bg-emerald-100 border-emerald-300",
-      textColor: "text-emerald-800",
-      buttonColor: "bg-emerald-600 hover:bg-emerald-700",
-      specialty: "Magic and Research",
-      startingBonus: "+20% Magic power, +15% Research speed",
-    },
-    wirabumi: {
-      name: "Wirabumi",
-      description:
-        "Hard-working beings who live in hidden areas, caves, and underground. Known for their industrious nature.",
-      icon: <Mountain className="h-6 w-6" />,
-      color: "bg-stone-100 border-stone-300",
-      textColor: "text-stone-800",
-      buttonColor: "bg-stone-600 hover:bg-stone-700",
-      specialty: "Mining and Construction",
-      startingBonus: "+25% Resource gathering, +15% Building speed",
-    },
-    jatayu: {
-      name: "Jatayu",
-      description:
-        "Flying beings who live in highlands. They possess incredible aggressive attack capabilities and unmatched speed.",
-      icon: <Bird className="h-6 w-6" />,
-      color: "bg-sky-100 border-sky-300",
-      textColor: "text-sky-800",
-      buttonColor: "bg-sky-600 hover:bg-sky-700",
-      specialty: "Speed and Reconnaissance",
-      startingBonus: "+30% Movement speed, +20% Vision range",
-    },
-    kurawa: {
-      name: "Kurawa",
-      description:
-        "The most cunning lowland beings in the Kurusetra universe. Masters of secret operations and deception.",
-      icon: <Skull className="h-6 w-6" />,
-      color: "bg-purple-100 border-purple-300",
-      textColor: "text-purple-800",
-      buttonColor: "bg-purple-600 hover:bg-purple-700",
-      specialty: "Espionage and Sabotage",
-      startingBonus: "+25% Spy effectiveness, +15% Enemy detection",
-    },
-    tibrasara: {
-      name: "Tibrasara",
-      description:
-        "Mysterious beings who live in dark forests with unparalleled archery skills. Their killing instinct is feared throughout the realm.",
-      icon: <Shield className="h-6 w-6" />,
-      color: "bg-indigo-100 border-indigo-300",
-      textColor: "text-indigo-800",
-      buttonColor: "bg-indigo-600 hover:bg-indigo-700",
-      specialty: "Ranged Combat and Stealth",
-      startingBonus: "+20% Ranged damage, +15% Stealth capability",
-    },
-    raksasa: {
-      name: "Raksasa",
-      description:
-        "Enormous and terrifying beings who inhabit steep rocky hills. Their army strength is unmatched in the realm.",
-      icon: <Sword className="h-6 w-6" />,
-      color: "bg-red-100 border-red-300",
-      textColor: "text-red-800",
-      buttonColor: "bg-red-600 hover:bg-red-700",
-      specialty: "Brute Force and Intimidation",
-      startingBonus: "+30% Army strength, +20% Enemy morale reduction",
-    },
-    dedemit: {
-      name: "Dedemit",
-      description:
-        "Spectral beings who exist in the realm of wandering spirits. They require no food to survive and their armies never perish in battle.",
-      icon: <Ghost className="h-6 w-6" />,
-      color: "bg-slate-100 border-slate-300",
-      textColor: "text-slate-800",
-      buttonColor: "bg-slate-600 hover:bg-slate-700",
-      specialty: "Immortality and Spirit Magic",
-      startingBonus: "-25% Food consumption, +20% Army revival rate",
-    },
-  };
+    const predictions = getAllZodiacPredictions();
+    setZodiacPredictions(predictions);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-neuro-bg p-6 flex flex-col items-center">
-      <div className="max-w-6xl w-full mx-auto">
-        {/* Dark Mode Toggle */}
-        <div className="absolute top-4 right-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="rounded-full w-10 h-10 shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200"
-            aria-label="Toggle dark mode"
-          >
-            {isDarkMode ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </Button>
-        </div>
-        {/* Hero Section */}
-        <div className="text-center mb-12 mt-8">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 header-gradient">
-            Welcome to Kurusetra
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Choose your race, build your kingdom, and conquer the realm in this
-            epic strategy game set in a mystical universe.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-4 justify-center">
-            <Button
-              size="lg"
-              className="shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200 bg-primary hover:bg-primary/90"
-              onClick={() => navigate("/register")}
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+      {/* Navigation */}
+      <nav className="bg-gray-800 bg-opacity-50 fixed w-full z-10">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <Link to="/" className="text-2xl font-bold">Kingdom Wars</Link>
+          <div className="space-x-4">
+            <button
+              onClick={() => setShowLoginMenu(true)}
+              className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 transition-colors"
             >
-              Create Your Kingdom
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="shadow-neuro-flat hover:shadow-neuro-pressed transition-all duration-200 border-2"
-              onClick={() => navigate("/login")}
+              Login
+            </button>
+            <Link
+              to="/register"
+              className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 transition-colors"
             >
-              Login to Your Kingdom
-            </Button>
+              Register
+            </Link>
           </div>
         </div>
+      </nav>
 
-        {/* Races Section */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-6 text-center">
-            <span className="flex items-center justify-center gap-2">
-              <Crown className="h-6 w-6" />
-              <span>Choose Your Race</span>
-            </span>
-          </h2>
-          <p className="text-center text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Each race in Kurusetra has unique abilities, strengths, and cultural
-            traits that will shape your kingdom's destiny.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Object.entries(races).map(([id, race]) => (
-              <Card
-                key={id}
-                className={`shadow-neuro-flat hover:shadow-neuro-convex transition-all duration-300 border-2 ${race.color} card-hover-effect`}
-              >
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2">
-                    <div className={`p-2 rounded-md ${race.color}`}>
-                      {race.icon}
-                    </div>
-                    <CardTitle className={race.textColor}>
-                      {race.name}
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm mb-3">{race.description}</p>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">
-                      <span className="font-semibold">Specialty:</span>{" "}
-                      {race.specialty}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">Starting Bonus:</span>{" "}
-                      {race.startingBonus}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* Zodiac Predictions Section */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-6 text-center">
-            <span className="flex items-center justify-center gap-2">
-              <Sparkles className="h-6 w-6" />
-              <span>Daily Zodiac Predictions</span>
-            </span>
-          </h2>
-          <p className="text-center text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Check your daily zodiac prediction for luck, love, and game victory
-            chances. Choose wisely to complement your race's natural abilities.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Object.entries(getAllZodiacPredictions()).map(([key, zodiac]) => (
-              <Card
-                key={key}
-                className={`shadow-neuro-flat hover:shadow-neuro-convex transition-all duration-300 border-2 bg-${zodiac.element.toLowerCase()}-100 border-${zodiac.element.toLowerCase()}-300 card-hover-effect`}
-              >
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`p-2 rounded-md bg-${zodiac.element.toLowerCase()}-100`}
-                    >
-                      {zodiac.element === "Fire" && (
-                        <Zap className="h-6 w-6 text-amber-600" />
-                      )}
-                      {zodiac.element === "Earth" && (
-                        <Mountain className="h-6 w-6 text-emerald-600" />
-                      )}
-                      {zodiac.element === "Air" && (
-                        <Bird className="h-6 w-6 text-sky-600" />
-                      )}
-                      {zodiac.element === "Water" && (
-                        <Sparkles className="h-6 w-6 text-blue-600" />
-                      )}
-                    </div>
-                    <CardTitle
-                      className={`text-${zodiac.element.toLowerCase() === "fire" ? "amber" : zodiac.element.toLowerCase() === "earth" ? "emerald" : zodiac.element.toLowerCase() === "air" ? "sky" : "blue"}-800`}
-                    >
-                      {zodiac.name}
-                    </CardTitle>
-                  </div>
-                  <CardDescription>{zodiac.period}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Zap className="h-4 w-4" />
-                        <span className="font-semibold">Luck:</span>
-                      </div>
-                      <p className="text-sm">{zodiac.luck}</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Heart className="h-4 w-4" />
-                        <span className="font-semibold">Love:</span>
-                      </div>
-                      <p className="text-sm">{zodiac.love}</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Trophy className="h-4 w-4" />
-                        <span className="font-semibold">Victory Chance:</span>
-                      </div>
-                      <div className="space-y-1">
-                        <Progress value={zodiac.winChance} className="h-2" />
-                        <p className="text-xs text-right">
-                          {zodiac.winChance}%
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-0">
-                  <p className="text-sm italic">"{zodiac.dailyMessage}"</p>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </section>
+      {/* Hero Section */}
+      <div className="container mx-auto px-4 pt-24 pb-16">
+        <h1 className="text-5xl font-bold text-center mb-8">Welcome to Kingdom Wars</h1>
+        <p className="text-xl text-center text-gray-300 mb-12">
+          Choose your race and discover your destiny through the stars
+        </p>
       </div>
+
+      {/* Race Selection */}
+      <section className="container mx-auto px-4 py-12">
+        <h2 className="text-3xl font-bold mb-8">Choose Your Race</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {races.map((race) => (
+            <div
+              key={race.name}
+              className={cn(
+                "p-6 rounded-lg cursor-pointer transition-all",
+                "bg-gray-800 hover:bg-gray-700",
+                selectedRace?.name === race.name && "ring-2 ring-blue-500"
+              )}
+              onClick={() => setSelectedRace(race)}
+            >
+              <div className="aspect-square rounded-lg overflow-hidden mb-4">
+                <img
+                  src={race.image}
+                  alt={race.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h3 className="text-xl font-bold mb-2">{race.name}</h3>
+              <p className="text-gray-400 mb-4">{race.description}</p>
+              <div>
+                <h4 className="font-semibold mb-2">Strengths:</h4>
+                <ul className="list-disc list-inside text-gray-400">
+                  {race.strengths.map((strength) => (
+                    <li key={strength}>{strength}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Zodiac Predictions */}
+      <section className="container mx-auto px-4 py-12">
+        <h2 className="text-3xl font-bold mb-8">Daily Zodiac Predictions</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {zodiacPredictions && Object.entries(zodiacPredictions).map(([key, zodiac]: [string, any]) => (
+            <div
+              key={key}
+              className={cn(
+                "p-6 rounded-lg cursor-pointer transition-all",
+                "bg-gray-800 hover:bg-gray-700",
+                selectedZodiac === key && "ring-2 ring-purple-500"
+              )}
+              onClick={() => setSelectedZodiac(key)}
+            >
+              <h3 className="text-xl font-bold mb-2">{zodiac.name}</h3>
+              <p className="text-gray-400 mb-2">{zodiac.period}</p>
+              {selectedZodiac === key && (
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <h4 className="font-semibold text-purple-400">Luck Today:</h4>
+                    <p className="text-gray-300">{zodiac.luck}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-red-400">Love Forecast:</h4>
+                    <p className="text-gray-300">{zodiac.love}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-green-400">Battle Victory Chance:</h4>
+                    <div className="w-full bg-gray-700 rounded-full h-2.5">
+                      <div
+                        className="bg-green-500 h-2.5 rounded-full"
+                        style={{ width: `${zodiac.winChance}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-gray-300 mt-1">{zodiac.winChance}%</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-blue-400">Daily Message:</h4>
+                    <p className="text-gray-300">{zodiac.dailyMessage}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="container mx-auto px-4 py-12 text-center">
+        <h2 className="text-3xl font-bold mb-4">Ready to Begin Your Journey?</h2>
+        <p className="text-xl text-gray-400 mb-8">
+          Join thousands of players in the ultimate kingdom building experience
+        </p>
+        <div className="space-x-4">
+          <Link
+            to="/register"
+            className="inline-block px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors"
+          >
+            Create Account
+          </Link>
+          <button
+            onClick={() => setShowLoginMenu(true)}
+            className="inline-block px-8 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-semibold transition-colors"
+          >
+            Login
+          </button>
+        </div>
+      </section>
+
+      {/* Login Menu */}
+      {showLoginMenu && <LoginMenu />}
     </div>
   );
 }

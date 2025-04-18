@@ -218,17 +218,12 @@ export const generateDailyPrediction = (
 ): ZodiacPrediction => {
   // Use the current date as seed for "randomness" to ensure same predictions for the whole day
   const today = new Date();
-  const dateSeed =
-    today.getFullYear() * 10000 +
-    (today.getMonth() + 1) * 100 +
-    today.getDate();
-
-  // Use the zodiac key and date to create a seeded random number
-  const seedValue = dateSeed + zodiacKey.length;
+  const dateSeed = today.getTime();
+  let seedValue = dateSeed + zodiacKey.length;
+  const x = Math.sin(seedValue++) * 10000;
 
   // Simple seeded random function
   const seededRandom = () => {
-    const x = Math.sin(seedValue++) * 10000;
     return x - Math.floor(x);
   };
 

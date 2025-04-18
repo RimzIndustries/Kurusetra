@@ -12,7 +12,6 @@ import LandingPage from "./components/LandingPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { MultiplayerProvider } from "./contexts/MultiplayerContext";
 import React from "react";
-import routes from "tempo-routes";
 import { captureError } from "./utils/sentry";
 import { PerformanceMetrics } from "./components/PerformanceMetrics";
 
@@ -35,6 +34,33 @@ function AppRoutes() {
     captureError(error, { component: 'App' });
   }, []);
 
+  const routes = useRoutes([
+    {
+      path: "/",
+      element: <MemoizedLayout />,
+      children: [
+        { index: true, element: <LandingPage /> },
+        { path: "login", element: <Login /> },
+        { path: "register", element: <Register /> },
+        {
+          path: "game",
+          element: <MemoizedProtectedRoute />,
+          children: [
+            { index: true, element: <Home /> },
+            { path: "resources", element: <ResourceManagement /> },
+            { path: "building", element: <Building /> },
+            { path: "military", element: <Military /> },
+            { path: "dewan-raja", element: <DewanRaja /> },
+            { path: "combat", element: <CombatInterface /> },
+            { path: "kingdom", element: <KingdomOverview /> },
+            { path: "map", element: <GameMap /> },
+            { path: "profile", element: <UserProfile /> },
+          ],
+        },
+      ],
+    },
+  ]);
+
   return (
     <ErrorBoundary onError={handleError}>
       <AuthProvider>
@@ -50,39 +76,7 @@ function AppRoutes() {
                   </div>
                 }
               >
-                <Routes>
-                  {/* Public routes */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/landing" element={<LandingPage />} />
-
-                  {/* Protected routes */}
-                  <Route element={<MemoizedProtectedRoute />}>
-                    <Route element={<MemoizedLayout />}>
-                      {/* Dashboard routes */}
-                      <Route path="/" element={<Home />} />
-                      <Route path="/dashboard" element={<Home />} />
-                      <Route path="/home" element={<Home />} />
-
-                      {/* Game management routes */}
-                      <Route path="/resources" element={<ResourceManagement />} />
-                      <Route path="/building" element={<Building />} />
-                      <Route path="/military" element={<Military />} />
-                      <Route path="/alliance" element={<DewanRaja />} />
-                      <Route path="/combat" element={<CombatInterface />} />
-                      <Route path="/kingdom" element={<KingdomOverview />} />
-                      <Route path="/map" element={<GameMap />} />
-                      <Route path="/profile" element={<UserProfile />} />
-                    </Route>
-                  </Route>
-
-                  {/* Add the tempo route before the catch-all */}
-                  {import.meta.env.VITE_TEMPO === "true" && (
-                    <Route path="/tempobook/*" />
-                  )}
-                </Routes>
-                {/* Ensure Tempo routes are also wrapped in AuthProvider */}
-                {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
+                {routes}
               </Suspense>
             </div>
           </Router>
