@@ -1,0 +1,30 @@
+# Project configuration
+project_id = "mztynmhjxjpxhluyfdjc"
+api_url = "https://mztynmhjxjpxhluyfdjc.supabase.co"
+api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16dHlubWhqeGpweGhsdXlmZGpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzOTA5MzAsImV4cCI6MjA1OTk2NjkzMH0.oBDoUhAZXz-nfxAVBflQz2HslUkmeENNhF4jOpbelPI"
+
+# Database configuration
+[db]
+  host = "db.mztynmhjxjpxhluyfdjc.supabase.co"
+  port = 5432
+  database = "postgres"
+  user = "postgres"
+  password = "your-db-password"
+
+# Storage configuration
+[storage]
+  bucket = "game-assets"
+
+# Auth configuration
+[auth]
+  site_url = "https://mztynmhjxjpxhluyfdjc.supabase.co"
+  jwt_secret = "your-jwt-secret"
+
+# Functions configuration
+[functions]
+  verify_jwt = true
+
+# Realtime configuration
+[realtime]
+  enabled = true
+  jwt_secret = "your-jwt-secret" 
